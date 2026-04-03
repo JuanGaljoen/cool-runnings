@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { UserProvider } from '@/components/providers/user-provider'
 import type { UserProfile } from '@/components/providers/user-provider'
 import { Toaster } from '@/components/ui/sonner'
+import NextTopLoader from 'nextjs-toploader'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -49,6 +50,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <UserProvider profile={profile}>
+          <NextTopLoader showSpinner={false} />
           {children}
           <Toaster richColors position="top-right" />
         </UserProvider>

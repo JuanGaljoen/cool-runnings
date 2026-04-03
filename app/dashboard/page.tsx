@@ -1,9 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { signOut } from '@/app/login/actions'
-import { Button } from '@/components/ui/button'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { RecentMovementsTable } from '@/components/dashboard/recent-movements-table'
-import Link from 'next/link'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -33,49 +30,24 @@ export default async function DashboardPage() {
     ])
 
   const products = productsResult.data ?? []
-
   const totalProducts = products.length
-
   const totalStock = products.reduce(
     (sum, p) => sum + (p.stock_levels?.quantity ?? 0),
     0
   )
-
   const lowStockCount = products.filter(
     (p) => (p.stock_levels?.quantity ?? 0) < p.low_stock_threshold
   ).length
-
   const movementsToday = movementsTodayResult.count ?? 0
   const recentMovements = recentMovementsResult.data ?? []
 
   return (
     <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Overview of your inventory.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/products">Products</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/stock">Stock</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/reports">Reports</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/settings">Settings</Link>
-          </Button>
-          <form action={signOut}>
-            <Button variant="ghost" size="sm" type="submit">
-              Sign out
-            </Button>
-          </form>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Overview of your inventory.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

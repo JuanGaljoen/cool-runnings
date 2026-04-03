@@ -12,11 +12,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" className="w-full" disabled={pending}>
+      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {pending ? 'Signing in…' : 'Sign in'}
     </Button>
   )
