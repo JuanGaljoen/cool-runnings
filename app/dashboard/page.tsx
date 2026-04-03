@@ -1,5 +1,6 @@
 import { signOut } from '@/app/login/actions'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   return (
@@ -11,6 +12,11 @@ export default function DashboardPage() {
             Sign out
           </Button>
         </form>
+      </div>
+      <div className="flex gap-4">
+        <Button asChild variant="outline">
+          <Link href="/dashboard/products">Products</Link>
+        </Button>
       </div>
     </div>
   )
