@@ -64,6 +64,12 @@ export default async function DashboardPage() {
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/stock">Stock</Link>
           </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/reports">Reports</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/settings">Settings</Link>
+          </Button>
           <form action={signOut}>
             <Button variant="ghost" size="sm" type="submit">
               Sign out

@@ -3,6 +3,7 @@ import { updateSession } from '@/lib/supabase/middleware'
 
 const PROTECTED_PREFIXES = ['/dashboard']
 const AUTH_ROUTES = ['/login']
+const PUBLIC_PREFIXES = ['/auth']
 
 export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
@@ -12,6 +13,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(prefix)
   )
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route))
+  const isPublic = PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+
+  if (isPublic) return supabaseResponse
 
   // Unauthenticated user trying to access a protected route
   if (isProtected && !user) {
