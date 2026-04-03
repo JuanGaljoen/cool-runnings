@@ -17,6 +17,9 @@ export default function DashboardPage() {
         <Button asChild variant="outline">
           <Link href="/dashboard/products">Products</Link>
         </Button>
+        <Button asChild variant="outline">
+          <Link href="/dashboard/stock">Stock</Link>
+        </Button>
       </div>
     </div>
   )

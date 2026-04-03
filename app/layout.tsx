@@ -4,6 +4,7 @@ import './globals.css'
 import { createClient } from '@/lib/supabase/server'
 import { UserProvider } from '@/components/providers/user-provider'
 import type { UserProfile } from '@/components/providers/user-provider'
+import { Toaster } from '@/components/ui/sonner'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -49,6 +50,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <UserProvider profile={profile}>
           {children}
+          <Toaster richColors position="top-right" />
         </UserProvider>
       </body>
     </html>
