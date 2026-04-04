@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { productSchema, type ProductFormValues } from '@/lib/schemas/product'
-export type { ProductFormValues }
 
 export async function createProduct(
   values: ProductFormValues

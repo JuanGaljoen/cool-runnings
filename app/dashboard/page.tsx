@@ -29,6 +29,10 @@ export default async function DashboardPage() {
         .limit(10),
     ])
 
+  if (productsResult.error) console.error('Failed to fetch products:', productsResult.error.message)
+  if (movementsTodayResult.error) console.error('Failed to fetch movement count:', movementsTodayResult.error.message)
+  if (recentMovementsResult.error) console.error('Failed to fetch recent movements:', recentMovementsResult.error.message)
+
   const products = productsResult.data ?? []
   const totalProducts = products.length
   const totalStock = products.reduce(

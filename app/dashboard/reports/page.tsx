@@ -11,8 +11,9 @@ interface ReportsPageProps {
 }
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
+  const DEFAULT_RANGE_DAYS = 30
   const todayStr = format(new Date(), 'yyyy-MM-dd')
-  const fromStr = searchParams.from ?? format(subDays(new Date(), 29), 'yyyy-MM-dd')
+  const fromStr = searchParams.from ?? format(subDays(new Date(), DEFAULT_RANGE_DAYS - 1), 'yyyy-MM-dd')
   const toStr = searchParams.to ?? todayStr
 
   // Use noon UTC to safely represent each date regardless of server timezone

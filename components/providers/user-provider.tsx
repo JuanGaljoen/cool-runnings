@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext } from 'react'
-import type { Tables, Enums } from '@/types/database'
+import type { Enums } from '@/types/database'
 
 export type UserProfile = {
   id: string

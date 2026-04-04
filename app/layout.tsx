@@ -37,12 +37,13 @@ export default async function RootLayout({
   let profile: UserProfile | null = null
 
   if (user) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, role')
       .eq('id', user.id)
       .single()
 
+    if (error) console.error('Failed to fetch user profile:', error.message)
     profile = data ?? null
   }
 

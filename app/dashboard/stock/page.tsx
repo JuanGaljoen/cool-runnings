@@ -5,11 +5,13 @@ import { MovementForm } from '@/components/stock/movement-form'
 export default async function StockPage() {
   const supabase = await createClient()
 
-  const { data: products } = await supabase
+  const { data: products, error } = await supabase
     .from('products')
     .select('id, name, sku, unit, low_stock_threshold, stock_levels(quantity)')
     .eq('is_active', true)
     .order('name')
+
+  if (error) console.error('Failed to fetch products:', error.message)
 
   const productList = products ?? []
 

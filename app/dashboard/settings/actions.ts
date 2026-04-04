@@ -15,7 +15,7 @@ export async function inviteUser(
 
   const headersList = await headers()
   const host = headersList.get('host')
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+  const protocol = headersList.get('x-forwarded-proto') ?? (process.env.NODE_ENV === 'production' ? 'https' : 'http')
   const redirectTo = `${protocol}://${host}/auth/callback`
 
   const adminClient = createAdminClient()
@@ -28,9 +28,11 @@ export async function inviteUser(
   if (error) return { error: error.message }
 
   // Ensure profile exists with staff role (trigger may not fire for invites)
-  await adminClient
+  const { error: upsertError } = await adminClient
     .from('profiles')
     .upsert({ id: data.user.id, role: 'staff' }, { onConflict: 'id' })
+
+  if (upsertError) return { error: upsertError.message }
 
   revalidatePath('/dashboard/settings')
   return { error: null }

@@ -127,9 +127,11 @@ export function DashboardSidebar({ fullName, email, isAdmin }: DashboardSidebarP
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
+          role="presentation"
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setMobileOpen(false)}
-          aria-hidden
+          onKeyDown={(e) => e.key === 'Escape' && setMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 
