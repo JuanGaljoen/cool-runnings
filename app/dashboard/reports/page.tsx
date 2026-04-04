@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { format, eachDayOfInterval, parseISO, subDays, startOfDay, endOfDay } from 'date-fns'
+import { format, eachDayOfInterval, subDays } from 'date-fns'
 import { DateRangePicker } from '@/components/reports/date-range-picker'
 import { SummaryTable, type ProductSummary } from '@/components/reports/summary-table'
 import { MovementChart, type ChartDataPoint } from '@/components/reports/movement-chart'
@@ -11,20 +11,21 @@ interface ReportsPageProps {
 }
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
-  const today = new Date()
-  const toDate = searchParams.to ? parseISO(searchParams.to) : today
-  const fromDate = searchParams.from ? parseISO(searchParams.from) : subDays(today, 29)
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const fromStr = searchParams.from ?? format(subDays(new Date(), 29), 'yyyy-MM-dd')
+  const toStr = searchParams.to ?? todayStr
 
-  const fromStr = format(fromDate, 'yyyy-MM-dd')
-  const toStr = format(toDate, 'yyyy-MM-dd')
+  // Use noon UTC to safely represent each date regardless of server timezone
+  const fromDate = new Date(`${fromStr}T12:00:00.000Z`)
+  const toDate = new Date(`${toStr}T12:00:00.000Z`)
 
   const supabase = await createClient()
 
   const { data: movements } = await supabase
     .from('stock_movements')
     .select('id, movement_type, quantity, created_at, products(id, name)')
-    .gte('created_at', startOfDay(fromDate).toISOString())
-    .lte('created_at', endOfDay(toDate).toISOString())
+    .gte('created_at', `${fromStr}T00:00:00.000Z`)
+    .lte('created_at', `${toStr}T23:59:59.999Z`)
     .order('created_at')
 
   const list = movements ?? []
@@ -58,9 +59,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const days = eachDayOfInterval({ start: fromDate, end: toDate })
   const chartData: ChartDataPoint[] = days.map((day) => {
     const dateStr = format(day, 'yyyy-MM-dd')
-    const dayMovements = list.filter(
-      (m) => format(new Date(m.created_at), 'yyyy-MM-dd') === dateStr
-    )
+    const dayMovements = list.filter((m) => m.created_at.slice(0, 10) === dateStr)
     return {
       date: format(day, 'MMM d'),
       production: dayMovements
