@@ -6,6 +6,7 @@ import { UserProvider } from '@/components/providers/user-provider'
 import type { UserProfile } from '@/components/providers/user-provider'
 import { Toaster } from '@/components/ui/sonner'
 import NextTopLoader from 'nextjs-toploader'
+import { ThemeProvider } from '@/components/providers/theme-provider'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -50,11 +51,13 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <UserProvider profile={profile}>
-          <NextTopLoader showSpinner={false} />
-          {children}
-          <Toaster richColors position="top-right" />
-        </UserProvider>
+        <ThemeProvider>
+          <UserProvider profile={profile}>
+            <NextTopLoader showSpinner={false} />
+            {children}
+            <Toaster richColors position="top-right" />
+          </UserProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

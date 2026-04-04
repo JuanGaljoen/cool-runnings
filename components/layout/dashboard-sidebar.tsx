@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/layout/theme-toggle'
 import { signOut } from '@/app/login/actions'
 
 type NavItem = {
@@ -87,9 +88,12 @@ function SidebarContent({
 
       {/* User + sign out */}
       <div className="border-t p-3 space-y-1">
-        <div className="px-3 py-2">
-          <p className="text-sm font-medium truncate">{fullName || 'User'}</p>
-          <p className="text-xs text-muted-foreground truncate">{email}</p>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{fullName || 'User'}</p>
+            <p className="text-xs text-muted-foreground truncate">{email}</p>
+          </div>
+          <ThemeToggle />
         </div>
         <form action={signOut}>
           <button
