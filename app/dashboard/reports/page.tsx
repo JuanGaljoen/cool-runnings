@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { format, eachDayOfInterval, parseISO, subDays } from 'date-fns'
+import { format, eachDayOfInterval, parseISO, subDays, startOfDay, endOfDay } from 'date-fns'
 import { DateRangePicker } from '@/components/reports/date-range-picker'
 import { SummaryTable, type ProductSummary } from '@/components/reports/summary-table'
 import { MovementChart, type ChartDataPoint } from '@/components/reports/movement-chart'
@@ -23,8 +23,8 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const { data: movements } = await supabase
     .from('stock_movements')
     .select('id, movement_type, quantity, created_at, products(id, name)')
-    .gte('created_at', `${fromStr}T00:00:00`)
-    .lte('created_at', `${toStr}T23:59:59`)
+    .gte('created_at', startOfDay(fromDate).toISOString())
+    .lte('created_at', endOfDay(toDate).toISOString())
     .order('created_at')
 
   const list = movements ?? []
@@ -58,7 +58,9 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const days = eachDayOfInterval({ start: fromDate, end: toDate })
   const chartData: ChartDataPoint[] = days.map((day) => {
     const dateStr = format(day, 'yyyy-MM-dd')
-    const dayMovements = list.filter((m) => m.created_at.startsWith(dateStr))
+    const dayMovements = list.filter(
+      (m) => format(new Date(m.created_at), 'yyyy-MM-dd') === dateStr
+    )
     return {
       date: format(day, 'MMM d'),
       production: dayMovements
