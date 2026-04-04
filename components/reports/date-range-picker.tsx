@@ -17,7 +17,7 @@ interface DateRangePickerProps {
 export function DateRangePicker({ from, to }: DateRangePickerProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [range, setRange] = useState<DateRange>({ from, to })
+  const [range, setRange] = useState<DateRange | undefined>(undefined)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,30 +31,26 @@ export function DateRangePicker({ from, to }: DateRangePickerProps) {
   }, [open])
 
   function handleSelect(selected: DateRange | undefined) {
-    const next = selected ?? { from: undefined, to: undefined }
-    setRange(next)
+    setRange(selected)
 
-    if (next.from && next.to && next.from.getTime() !== next.to.getTime()) {
+    if (selected?.from && selected?.to && selected.from.getTime() !== selected.to.getTime()) {
       const params = new URLSearchParams({
-        from: format(next.from, 'yyyy-MM-dd'),
-        to: format(next.to, 'yyyy-MM-dd'),
+        from: format(selected.from, 'yyyy-MM-dd'),
+        to: format(selected.to, 'yyyy-MM-dd'),
       })
       router.push(`/dashboard/reports?${params.toString()}`)
       setOpen(false)
     }
   }
 
-  const label =
-    range.from && range.to
-      ? `${format(range.from, 'MMM d, yyyy')} – ${format(range.to, 'MMM d, yyyy')}`
-      : 'Pick a date range'
+  const label = `${format(from, 'MMM d, yyyy')} – ${format(to, 'MMM d, yyyy')}`
 
   return (
     <div ref={containerRef} className="relative">
       <Button
         variant="outline"
         className="gap-2"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { setRange(undefined); setOpen((v) => !v) }}
         type="button"
       >
         <CalendarIcon className="h-4 w-4" />
