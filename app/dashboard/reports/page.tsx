@@ -3,6 +3,7 @@ import { format, eachDayOfInterval, subDays } from 'date-fns'
 import { DateRangePicker } from '@/components/reports/date-range-picker'
 import { SummaryTable, type ProductSummary } from '@/components/reports/summary-table'
 import { MovementChart, type ChartDataPoint } from '@/components/reports/movement-chart'
+import { ClientDispatchTable, type ClientDispatchRow } from '@/components/reports/client-dispatch-table'
 import { ExportButton } from '@/components/reports/export-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -24,7 +25,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
   const { data: movements } = await supabase
     .from('stock_movements')
-    .select('id, movement_type, quantity, created_at, products(id, name)')
+    .select('id, movement_type, quantity, created_at, products(id, name), clients(id, company_name)')
     .gte('created_at', `${fromStr}T00:00:00.000Z`)
     .lte('created_at', `${toStr}T23:59:59.999Z`)
     .order('created_at')
@@ -54,6 +55,25 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   }
   const summaryRows = Array.from(productMap.values()).sort((a, b) =>
     a.product_name.localeCompare(b.product_name)
+  )
+
+  // Aggregate dispatches by client
+  const clientMap = new Map<string, ClientDispatchRow>()
+  for (const m of list) {
+    if (m.movement_type !== 'dispatch') continue
+    const client = m.clients as { id: string; company_name: string } | null
+    const key = client?.id ?? 'unassigned'
+    if (!clientMap.has(key)) {
+      clientMap.set(key, {
+        client_id: client?.id ?? null,
+        client_name: client?.company_name ?? 'No client',
+        dispatched: 0,
+      })
+    }
+    clientMap.get(key)!.dispatched += m.quantity
+  }
+  const clientDispatchRows = Array.from(clientMap.values()).sort(
+    (a, b) => b.dispatched - a.dispatched
   )
 
   // Aggregate by day for chart
@@ -93,6 +113,15 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         </CardHeader>
         <CardContent className="p-0 pb-2">
           <SummaryTable rows={summaryRows} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Dispatches by client</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0 pb-2">
+          <ClientDispatchTable rows={clientDispatchRows} />
         </CardContent>
       </Card>
 
