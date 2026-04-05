@@ -1,6 +1,7 @@
 'use client'
 
 import { useFormState, useFormStatus } from 'react-dom'
+import { useSearchParams } from 'next/navigation'
 import { login } from './actions'
 import {
   Card,
@@ -26,6 +27,8 @@ function SubmitButton() {
 
 export default function LoginPage() {
   const [state, formAction] = useFormState(login, { error: null })
+  const searchParams = useSearchParams()
+  const linkError = searchParams.get('error') === 'auth'
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -59,6 +62,11 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
+            {linkError && (
+              <p className="text-sm text-destructive">
+                This link is invalid or has expired. Please ask an admin to send a new invite.
+              </p>
+            )}
             {state?.error && (
               <p className="text-sm text-destructive">{state.error}</p>
             )}
