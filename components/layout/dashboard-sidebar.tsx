@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 const ADMIN_NAV_ITEMS: NavItem[] = [
+  { href: '/dashboard/clients', label: 'Clients', icon: Building2 },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 

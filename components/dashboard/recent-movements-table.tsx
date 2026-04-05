@@ -19,6 +19,7 @@ type Movement = {
   created_at: string
   products: { name: string } | null
   profiles: { full_name: string | null } | null
+  clients: { company_name: string } | null
 }
 
 
@@ -43,6 +44,7 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
             <TableHead>Type</TableHead>
             <TableHead className="text-right">Quantity</TableHead>
             <TableHead>Note</TableHead>
+            <TableHead>Client</TableHead>
             <TableHead>Recorded by</TableHead>
             <TableHead>Date</TableHead>
           </TableRow>
@@ -50,7 +52,7 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
         <TableBody>
           {movements.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+              <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                 No movements recorded yet.
               </TableCell>
             </TableRow>
@@ -74,6 +76,9 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
                 <TableCell className="text-right">{m.quantity}</TableCell>
                 <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
                   {m.note ?? '—'}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {m.movement_type === 'dispatch' ? (m.clients?.company_name ?? '—') : '—'}
                 </TableCell>
                 <TableCell>{m.profiles?.full_name ?? 'Unknown'}</TableCell>
                 <TableCell className="text-muted-foreground text-sm whitespace-nowrap">

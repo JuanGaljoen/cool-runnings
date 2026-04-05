@@ -27,6 +27,7 @@ import { movementSchema, type MovementFormValues } from '@/lib/schemas/movement'
 import { createMovement } from '@/app/dashboard/stock/actions'
 
 type Product = { id: string; name: string }
+type Client = { id: string; company_name: string }
 
 const MOVEMENT_TYPES = [
   { value: 'production', label: 'Production' },
@@ -34,7 +35,7 @@ const MOVEMENT_TYPES = [
   { value: 'adjustment', label: 'Adjustment' },
 ] as const
 
-export function MovementForm({ products }: { products: Product[] }) {
+export function MovementForm({ products, clients }: { products: Product[]; clients: Client[] }) {
   const form = useForm<MovementFormValues>({
     resolver: zodResolver(movementSchema),
     defaultValues: {
@@ -42,8 +43,11 @@ export function MovementForm({ products }: { products: Product[] }) {
       movement_type: 'production',
       quantity: 1,
       note: '',
+      client_id: null,
     },
   })
+
+  const movementType = form.watch('movement_type')
 
   async function onSubmit(values: MovementFormValues) {
     const result = await createMovement(values)
@@ -119,6 +123,37 @@ export function MovementForm({ products }: { products: Product[] }) {
                 </FormItem>
               )}
             />
+
+            {movementType === 'dispatch' && (
+              <FormField
+                control={form.control}
+                name="client_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Client <span className="text-muted-foreground">(optional)</span></FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
+                      value={field.value ?? 'none'}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a client" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">— No client —</SelectItem>
+                        {clients.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.company_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

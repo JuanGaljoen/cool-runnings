@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          id: string
+          company_name: string
+          contact_name: string | null
+          email: string | null
+          phone: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_name: string
+          contact_name?: string | null
+          email?: string | null
+          phone?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_name?: string
+          contact_name?: string | null
+          email?: string | null
+          phone?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string
@@ -109,6 +139,7 @@ export type Database = {
           note: string | null
           product_id: string
           quantity: number
+          client_id: string | null
         }
         Insert: {
           created_at?: string
@@ -118,6 +149,7 @@ export type Database = {
           note?: string | null
           product_id: string
           quantity: number
+          client_id?: string | null
         }
         Update: {
           created_at?: string
@@ -127,6 +159,7 @@ export type Database = {
           note?: string | null
           product_id?: string
           quantity?: number
+          client_id?: string | null
         }
         Relationships: [
           {
@@ -141,6 +174,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]

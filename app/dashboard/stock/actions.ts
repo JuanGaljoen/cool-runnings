@@ -33,6 +33,7 @@ export async function createMovement(
   const { error } = await supabase.from('stock_movements').insert({
     ...parsed,
     created_by: user.id,
+    client_id: parsed.client_id ?? null,
   })
 
   if (error) return { error: error.message }
