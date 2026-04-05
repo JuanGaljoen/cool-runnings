@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import {
@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button'
 
 const schema = z
   .object({
-    fullName: z.string().min(1, 'Name is required'),
+    fullName: z.string().optional(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
@@ -39,6 +39,8 @@ type FormValues = z.infer<typeof schema>
 
 export default function SetPasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isReset = searchParams.get('mode') === 'reset'
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { fullName: '', password: '', confirmPassword: '' },
@@ -53,7 +55,7 @@ export default function SetPasswordPage() {
       return
     }
 
-    if (user) {
+    if (user && fullName) {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ full_name: fullName })
@@ -72,27 +74,31 @@ export default function SetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Set your password</CardTitle>
+          <CardTitle className="text-2xl">
+            {isReset ? 'Reset your password' : 'Set your password'}
+          </CardTitle>
           <CardDescription>
-            Choose a password to secure your account.
+            {isReset ? 'Enter a new password for your account.' : 'Choose a password to secure your account.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your name</FormLabel>
-                    <FormControl>
-                      <Input type="text" autoComplete="name" placeholder="Jane Smith" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!isReset && (
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your name</FormLabel>
+                      <FormControl>
+                        <Input type="text" autoComplete="name" placeholder="Jane Smith" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="password"

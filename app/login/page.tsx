@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -53,7 +54,12 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link href="/auth/forgot-password" className="text-sm text-muted-foreground hover:text-foreground">
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 name="password"
