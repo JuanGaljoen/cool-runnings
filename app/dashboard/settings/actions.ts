@@ -38,6 +38,51 @@ export async function inviteUser(
   return { error: null }
 }
 
+export async function updateUserName(
+  userId: string,
+  fullName: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data: caller } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (caller?.role !== 'admin') return { error: 'Forbidden' }
+
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ full_name: fullName.trim() })
+    .eq('id', userId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/settings')
+  return { error: null }
+}
+
+export async function deleteUser(
+  userId: string
+): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+  if (user.id === userId) return { error: 'You cannot delete your own account' }
+
+  const { data: caller } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (caller?.role !== 'admin') return { error: 'Forbidden' }
+
+  const adminClient = createAdminClient()
+
+  await adminClient.from('profiles').delete().eq('id', userId)
+
+  const { error } = await adminClient.auth.admin.deleteUser(userId)
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/settings')
+  return { error: null }
+}
+
 export async function updateUserRole(
   userId: string,
   role: Enums<'user_role'>

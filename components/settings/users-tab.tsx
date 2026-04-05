@@ -9,6 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { InviteForm } from './invite-form'
 import { UserRoleToggle } from './user-role-toggle'
+import { UserActions } from './user-actions'
 import type { Enums } from '@/types/database'
 
 export type UserRow = {
@@ -36,6 +37,7 @@ export function UsersTab({ users, currentUserId }: UsersTabProps) {
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
               <TableHead className="w-[120px]">Change role</TableHead>
+              <TableHead className="w-[80px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -64,6 +66,13 @@ export function UsersTab({ users, currentUserId }: UsersTabProps) {
                     <UserRoleToggle
                       userId={user.id}
                       currentRole={user.role}
+                      isSelf={user.id === currentUserId}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <UserActions
+                      userId={user.id}
+                      fullName={user.full_name}
                       isSelf={user.id === currentUserId}
                     />
                   </TableCell>
