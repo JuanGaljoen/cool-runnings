@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StockSummary } from '@/components/stock/stock-summary'
 import { MovementForm } from '@/components/stock/movement-form'
+import { Button } from '@/components/ui/button'
 
 export default async function StockPage() {
   const supabase = await createClient()
@@ -25,11 +27,16 @@ export default async function StockPage() {
 
   return (
     <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold mb-1">Stock</h1>
-        <p className="text-sm text-muted-foreground">
-          Current stock levels across all active products.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Stock</h1>
+          <p className="text-sm text-muted-foreground">
+            Current stock levels across all active products.
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard/stock/history">View history</Link>
+        </Button>
       </div>
 
       <StockSummary products={productList} />
