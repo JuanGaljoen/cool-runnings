@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button'
 
 const schema = z
   .object({
+    fullName: z.string().min(1, 'Name is required'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
@@ -40,16 +41,27 @@ export default function SetPasswordPage() {
   const router = useRouter()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { password: '', confirmPassword: '' },
+    defaultValues: { fullName: '', password: '', confirmPassword: '' },
   })
 
-  async function onSubmit({ password }: FormValues) {
+  async function onSubmit({ fullName, password }: FormValues) {
     const supabase = createClient()
-    const { error } = await supabase.auth.updateUser({ password })
 
-    if (error) {
-      toast.error(error.message)
+    const { data: { user }, error: authError } = await supabase.auth.updateUser({ password })
+    if (authError) {
+      toast.error(authError.message)
       return
+    }
+
+    if (user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName })
+        .eq('id', user.id)
+      if (profileError) {
+        toast.error(profileError.message)
+        return
+      }
     }
 
     toast.success('Password set — welcome!')
@@ -68,6 +80,19 @@ export default function SetPasswordPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your name</FormLabel>
+                    <FormControl>
+                      <Input type="text" autoComplete="name" placeholder="Jane Smith" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="password"
