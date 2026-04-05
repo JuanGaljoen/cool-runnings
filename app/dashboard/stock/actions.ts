@@ -17,6 +17,19 @@ export async function createMovement(
 
   const parsed = movementSchema.parse(values)
 
+  if (parsed.movement_type === 'dispatch' || parsed.movement_type === 'adjustment') {
+    const { data: level } = await supabase
+      .from('stock_levels')
+      .select('quantity')
+      .eq('product_id', parsed.product_id)
+      .single()
+
+    const available = level?.quantity ?? 0
+    if (parsed.quantity > available) {
+      return { error: `Insufficient stock — only ${available} unit(s) available` }
+    }
+  }
+
   const { error } = await supabase.from('stock_movements').insert({
     ...parsed,
     created_by: user.id,
