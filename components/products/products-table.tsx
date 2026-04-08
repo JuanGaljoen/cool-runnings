@@ -9,8 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { Plus } from 'lucide-react'
 import { ProductDialog } from './product-dialog'
 import { ProductRowActions } from './product-row-actions'
@@ -89,9 +89,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                   <TableCell>{product.unit}</TableCell>
                   <TableCell>{product.low_stock_threshold}</TableCell>
                   <TableCell>
-                    <Badge variant={product.is_active ? 'default' : 'secondary'}>
-                      {product.is_active ? 'Active' : 'Archived'}
-                    </Badge>
+                    <StatusBadge isActive={product.is_active} />
                   </TableCell>
                   {isAdmin && (
                     <TableCell>

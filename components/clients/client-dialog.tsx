@@ -3,7 +3,6 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -22,18 +21,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createClientAction, updateClientAction } from '@/app/dashboard/clients/actions'
+import { clientSchema, type ClientFormValues } from '@/lib/schemas/client'
 import type { Tables } from '@/types/database'
 
 type Client = Tables<'clients'>
-
-const schema = z.object({
-  company_name: z.string().min(1, 'Company name is required'),
-  contact_name: z.string().optional(),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().optional(),
-})
-
-type FormValues = z.infer<typeof schema>
 
 interface ClientDialogProps {
   open: boolean
@@ -44,8 +35,8 @@ interface ClientDialogProps {
 export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) {
   const isEdit = !!client
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<ClientFormValues>({
+    resolver: zodResolver(clientSchema),
     defaultValues: { company_name: '', contact_name: '', email: '', phone: '' },
   })
 
@@ -62,7 +53,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     }
   }, [client, form])
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: ClientFormValues) {
     const result = isEdit
       ? await updateClientAction(client.id, values)
       : await createClientAction(values)

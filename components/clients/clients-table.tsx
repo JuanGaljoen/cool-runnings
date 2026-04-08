@@ -10,8 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { Plus, Pencil, ArchiveRestore, Archive } from 'lucide-react'
 import { ClientDialog } from './client-dialog'
 import { toggleClientActive } from '@/app/dashboard/clients/actions'
@@ -87,9 +87,7 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
                   <TableCell>{client.email ?? '—'}</TableCell>
                   <TableCell>{client.phone ?? '—'}</TableCell>
                   <TableCell>
-                    <Badge variant={client.is_active ? 'default' : 'secondary'}>
-                      {client.is_active ? 'Active' : 'Archived'}
-                    </Badge>
+                    <StatusBadge isActive={client.is_active} />
                   </TableCell>
                   {isAdmin && (
                     <TableCell>

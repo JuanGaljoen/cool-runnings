@@ -2,16 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
+import { clientSchema, type ClientFormValues } from '@/lib/schemas/client'
 
-const clientSchema = z.object({
-  company_name: z.string().min(1, 'Company name is required'),
-  contact_name: z.string().optional(),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().optional(),
-})
-
-export type ClientFormValues = z.infer<typeof clientSchema>
+export type { ClientFormValues }
 
 export async function createClientAction(
   values: ClientFormValues

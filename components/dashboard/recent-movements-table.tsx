@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { MOVEMENT_LABELS } from '@/lib/movement-constants'
+import { MovementBadge } from '@/components/ui/movement-badge'
 import type { Enums } from '@/types/database'
 
 type MovementType = Enums<'movement_type'>
@@ -63,15 +63,7 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
                   {m.products?.name ?? '—'}
                 </TableCell>
                 <TableCell>
-                  <span className={
-                    m.movement_type === 'production'
-                      ? 'inline-flex items-center rounded-full bg-green-200 px-2.5 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                      : m.movement_type === 'dispatch'
-                      ? 'inline-flex items-center rounded-full bg-blue-200 px-2.5 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'inline-flex items-center rounded-full bg-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                  }>
-                    {MOVEMENT_LABELS[m.movement_type]}
-                  </span>
+                  <MovementBadge type={m.movement_type} />
                 </TableCell>
                 <TableCell className="text-right">{m.quantity}</TableCell>
                 <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">

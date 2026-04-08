@@ -1,9 +1,9 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { inviteSchema } from '@/lib/schemas/invite'
+import { requireAdmin } from '@/lib/auth-helpers'
 import { headers } from 'next/headers'
 import type { Enums } from '@/types/database'
 
@@ -42,12 +42,8 @@ export async function updateUserName(
   userId: string,
   fullName: string
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
-
-  const { data: caller } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (caller?.role !== 'admin') return { error: 'Forbidden' }
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
 
   const adminClient = createAdminClient()
   const { error } = await adminClient
@@ -64,13 +60,9 @@ export async function updateUserName(
 export async function deleteUser(
   userId: string
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
-  if (user.id === userId) return { error: 'You cannot delete your own account' }
-
-  const { data: caller } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (caller?.role !== 'admin') return { error: 'Forbidden' }
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+  if (auth.userId === userId) return { error: 'You cannot delete your own account' }
 
   const adminClient = createAdminClient()
 
@@ -87,18 +79,8 @@ export async function updateUserRole(
   userId: string,
   role: Enums<'user_role'>
 ): Promise<{ error: string | null }> {
-  // Only admins may call this — double-check server-side
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
-
-  const { data: caller } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (caller?.role !== 'admin') return { error: 'Forbidden' }
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
 
   const adminClient = createAdminClient()
   const { error } = await adminClient
