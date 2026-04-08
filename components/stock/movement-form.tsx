@@ -162,7 +162,7 @@ export function MovementForm({ products, clients }: { products: Product[]; clien
                 <FormItem>
                   <FormLabel>Quantity</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} className="w-40" {...field} />
+                    <Input type="number" min={1} className="w-40" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

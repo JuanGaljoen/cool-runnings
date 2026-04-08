@@ -11,7 +11,7 @@ export async function inviteUser(
   values: { email: string }
 ): Promise<{ error: string | null }> {
   const parsed = inviteSchema.safeParse(values)
-  if (!parsed.success) return { error: parsed.error.errors[0].message }
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   const headersList = await headers()
   const host = headersList.get('host')

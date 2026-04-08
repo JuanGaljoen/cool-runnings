@@ -143,7 +143,7 @@ export function ProductDialog({
                 <FormItem>
                   <FormLabel>Low stock threshold</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} {...field} />
+                    <Input type="number" min={0} {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
