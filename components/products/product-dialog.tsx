@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -84,6 +85,9 @@ export function ProductDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit product' : 'Add product'}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {isEditing ? 'Edit the details of this product.' : 'Fill in the details to add a new product.'}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
