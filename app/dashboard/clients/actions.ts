@@ -10,13 +10,14 @@ export async function createClientAction(
   values: ClientFormValues
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const parsed = clientSchema.parse(values)
+  const parsed = clientSchema.safeParse(values)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   const { error } = await supabase.from('clients').insert({
-    company_name: parsed.company_name,
-    contact_name: parsed.contact_name || null,
-    email: parsed.email || null,
-    phone: parsed.phone || null,
+    company_name: parsed.data.company_name,
+    contact_name: parsed.data.contact_name || null,
+    email: parsed.data.email || null,
+    phone: parsed.data.phone || null,
   })
 
   if (error) return { error: error.message }
@@ -30,15 +31,16 @@ export async function updateClientAction(
   values: ClientFormValues
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const parsed = clientSchema.parse(values)
+  const parsed = clientSchema.safeParse(values)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   const { error } = await supabase
     .from('clients')
     .update({
-      company_name: parsed.company_name,
-      contact_name: parsed.contact_name || null,
-      email: parsed.email || null,
-      phone: parsed.phone || null,
+      company_name: parsed.data.company_name,
+      contact_name: parsed.data.contact_name || null,
+      email: parsed.data.email || null,
+      phone: parsed.data.phone || null,
     })
     .eq('id', id)
 
