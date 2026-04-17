@@ -35,7 +35,7 @@ const MOVEMENT_TYPES = [
   { value: 'adjustment', label: 'Adjustment' },
 ] as const
 
-export function MovementForm({ products, clients }: { products: Product[]; clients: Client[] }) {
+export function MovementForm({ products, clients, onSuccess }: { products: Product[]; clients: Client[]; onSuccess?: () => void }) {
   const form = useForm<MovementFormValues>({
     resolver: zodResolver(movementSchema),
     defaultValues: {
@@ -64,6 +64,7 @@ export function MovementForm({ products, clients }: { products: Product[]; clien
 
     toast.success('Stock movement recorded')
     form.reset()
+    onSuccess?.()
   }
 
   return (

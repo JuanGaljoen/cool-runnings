@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { RecentMovementsTable } from '@/components/dashboard/recent-movements-table'
 import { TodaysClientDispatches } from '@/components/dashboard/todays-client-dispatches'
+import { QuickRecordSheet } from '@/components/dashboard/quick-record-sheet'
 import { StockSummary } from '@/components/stock/stock-summary'
 import { MovementChart, type ChartDataPoint } from '@/components/reports/movement-chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
     recentMovementsResult,
     chartMovementsResult,
     todayDispatchesResult,
+    clientsResult,
   ] = await Promise.all([
     supabase
       .from('products')
@@ -56,6 +58,12 @@ export default async function DashboardPage() {
       .select('quantity, clients(company_name)')
       .eq('movement_type', 'dispatch')
       .gte('created_at', startOfToday.toISOString()),
+
+    supabase
+      .from('clients')
+      .select('id, company_name')
+      .eq('is_active', true)
+      .order('company_name'),
   ])
 
   const products = productsResult.data ?? []
@@ -63,6 +71,7 @@ export default async function DashboardPage() {
   const recentMovements = recentMovementsResult.data ?? []
   const chartMovements = chartMovementsResult.data ?? []
   const todayDispatches = todayDispatchesResult.data ?? []
+  const clients = clientsResult.data ?? []
 
   // Stat cards
   const totalStock = products.reduce(
@@ -110,11 +119,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Overview of your inventory.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Overview of your inventory.
+          </p>
+        </div>
+        <QuickRecordSheet
+          products={products.map((p) => ({ id: p.id, name: p.name }))}
+          clients={clients}
+        />
       </div>
 
       {/* Stat cards */}
