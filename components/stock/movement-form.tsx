@@ -49,6 +49,11 @@ export function MovementForm({ products, clients }: { products: Product[]; clien
 
   const movementType = form.watch('movement_type')
 
+  function handleMovementTypeChange(value: string) {
+    form.setValue('movement_type', value as MovementFormValues['movement_type'])
+    if (value !== 'dispatch') form.setValue('client_id', null)
+  }
+
   async function onSubmit(values: MovementFormValues) {
     const result = await createMovement(values)
 
@@ -102,7 +107,7 @@ export function MovementForm({ products, clients }: { products: Product[]; clien
                   <FormLabel>Movement type</FormLabel>
                   <FormControl>
                     <RadioGroup
-                      onValueChange={field.onChange}
+                      onValueChange={handleMovementTypeChange}
                       value={field.value}
                       className="flex gap-6"
                     >
@@ -130,10 +135,10 @@ export function MovementForm({ products, clients }: { products: Product[]; clien
                 name="client_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Client <span className="text-muted-foreground">(optional)</span></FormLabel>
+                    <FormLabel>Client</FormLabel>
                     <Select
-                      onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
-                      value={field.value ?? 'none'}
+                      onValueChange={(v) => field.onChange(v)}
+                      value={field.value ?? ''}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -141,7 +146,6 @@ export function MovementForm({ products, clients }: { products: Product[]; clien
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">— No client —</SelectItem>
                         {clients.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.company_name}
