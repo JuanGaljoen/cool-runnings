@@ -23,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { movementSchema, type MovementFormValues } from '@/lib/schemas/movement'
+import { movementSchema, type MovementFormValues, ADJUSTMENT_REASONS } from '@/lib/schemas/movement'
 import { createMovement } from '@/app/dashboard/stock/actions'
 
 type Product = { id: string; name: string }
@@ -44,6 +44,7 @@ export function MovementForm({ products, clients, onSuccess }: { products: Produ
       quantity: 1,
       note: '',
       client_id: null,
+      adjustment_reason: null,
     },
   })
 
@@ -52,6 +53,7 @@ export function MovementForm({ products, clients, onSuccess }: { products: Produ
   function handleMovementTypeChange(value: string) {
     form.setValue('movement_type', value as MovementFormValues['movement_type'])
     if (value !== 'dispatch') form.setValue('client_id', null)
+    if (value !== 'adjustment') form.setValue('adjustment_reason', null)
   }
 
   async function onSubmit(values: MovementFormValues) {
@@ -150,6 +152,36 @@ export function MovementForm({ products, clients, onSuccess }: { products: Produ
                         {clients.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.company_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {movementType === 'adjustment' && (
+              <FormField
+                control={form.control}
+                name="adjustment_reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(v)}
+                      value={field.value ?? ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a reason" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {ADJUSTMENT_REASONS.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            {r.label}
                           </SelectItem>
                         ))}
                       </SelectContent>

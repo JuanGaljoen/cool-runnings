@@ -140,6 +140,7 @@ export type Database = {
           product_id: string
           quantity: number
           client_id: string | null
+          adjustment_reason: string | null
         }
         Insert: {
           created_at?: string
@@ -150,6 +151,7 @@ export type Database = {
           product_id: string
           quantity: number
           client_id?: string | null
+          adjustment_reason?: string | null
         }
         Update: {
           created_at?: string
@@ -160,6 +162,7 @@ export type Database = {
           product_id?: string
           quantity?: number
           client_id?: string | null
+          adjustment_reason?: string | null
         }
         Relationships: [
           {

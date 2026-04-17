@@ -7,6 +7,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { MovementBadge } from '@/components/ui/movement-badge'
+import { ADJUSTMENT_REASONS } from '@/lib/schemas/movement'
 import type { Enums } from '@/types/database'
 
 type MovementType = Enums<'movement_type'>
@@ -17,9 +18,15 @@ type Movement = {
   quantity: number
   note: string | null
   created_at: string
+  adjustment_reason: string | null
   products: { name: string } | null
   profiles: { full_name: string | null } | null
   clients: { company_name: string } | null
+}
+
+function formatAdjustmentReason(reason: string | null) {
+  if (!reason) return '—'
+  return ADJUSTMENT_REASONS.find((r) => r.value === reason)?.label ?? reason
 }
 
 
@@ -43,6 +50,7 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
             <TableHead>Product</TableHead>
             <TableHead>Type</TableHead>
             <TableHead className="text-right">Quantity</TableHead>
+            <TableHead>Reason</TableHead>
             <TableHead>Note</TableHead>
             <TableHead>Client</TableHead>
             <TableHead>Recorded by</TableHead>
@@ -52,7 +60,7 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
         <TableBody>
           {movements.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                 No movements recorded yet.
               </TableCell>
             </TableRow>
@@ -66,6 +74,9 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
                   <MovementBadge type={m.movement_type} />
                 </TableCell>
                 <TableCell className="text-right">{m.quantity}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {m.movement_type === 'adjustment' ? formatAdjustmentReason(m.adjustment_reason) : '—'}
+                </TableCell>
                 <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
                   {m.note ?? '—'}
                 </TableCell>

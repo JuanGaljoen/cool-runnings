@@ -30,7 +30,7 @@ export default async function MovementHistoryPage({ searchParams }: HistoryPageP
   let query = supabase
     .from('stock_movements')
     .select(
-      'id, movement_type, quantity, note, created_at, products(name), profiles(full_name), clients(company_name)',
+      'id, movement_type, quantity, note, adjustment_reason, created_at, products(name), profiles(full_name), clients(company_name)',
       { count: 'exact' }
     )
     .order('created_at', { ascending: false })
