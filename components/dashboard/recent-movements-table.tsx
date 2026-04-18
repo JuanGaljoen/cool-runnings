@@ -39,9 +39,12 @@ function formatDateTime(iso: string) {
 
 interface RecentMovementsTableProps {
   movements: Movement[]
+  compact?: boolean
 }
 
-export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
+export function RecentMovementsTable({ movements, compact = false }: RecentMovementsTableProps) {
+  const colSpan = compact ? 6 : 8
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -50,8 +53,8 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
             <TableHead>Product</TableHead>
             <TableHead>Type</TableHead>
             <TableHead className="text-right">Quantity</TableHead>
-            <TableHead>Reason</TableHead>
-            <TableHead>Note</TableHead>
+            {!compact && <TableHead>Reason</TableHead>}
+            {!compact && <TableHead>Note</TableHead>}
             <TableHead>Client</TableHead>
             <TableHead>Recorded by</TableHead>
             <TableHead>Date</TableHead>
@@ -60,7 +63,7 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
         <TableBody>
           {movements.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
+              <TableCell colSpan={colSpan} className="text-center text-muted-foreground py-10">
                 No movements recorded yet.
               </TableCell>
             </TableRow>
@@ -74,12 +77,16 @@ export function RecentMovementsTable({ movements }: RecentMovementsTableProps) {
                   <MovementBadge type={m.movement_type} />
                 </TableCell>
                 <TableCell className="text-right">{m.quantity}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {m.movement_type === 'adjustment' ? formatAdjustmentReason(m.adjustment_reason) : '—'}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
-                  {m.note ?? '—'}
-                </TableCell>
+                {!compact && (
+                  <TableCell className="text-muted-foreground text-sm">
+                    {m.movement_type === 'adjustment' ? formatAdjustmentReason(m.adjustment_reason) : '—'}
+                  </TableCell>
+                )}
+                {!compact && (
+                  <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
+                    {m.note ?? '—'}
+                  </TableCell>
+                )}
                 <TableCell className="text-muted-foreground text-sm">
                   {m.movement_type === 'dispatch' ? (m.clients?.company_name ?? '—') : '—'}
                 </TableCell>

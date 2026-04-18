@@ -196,7 +196,7 @@ export default async function DashboardPage() {
             <Link href="/dashboard/stock/history">View all</Link>
           </Button>
         </div>
-        <RecentMovementsTable movements={recentMovements} />
+        <RecentMovementsTable movements={recentMovements} compact />
       </div>
     </div>
   )
