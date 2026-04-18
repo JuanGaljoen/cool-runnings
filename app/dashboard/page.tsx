@@ -109,8 +109,8 @@ export default async function DashboardPage() {
   // Today's dispatches by client
   const clientMap = new Map<string, number>()
   for (const m of todayDispatches) {
-    const name =
-      (m.clients as { company_name: string } | null)?.company_name ?? 'No client'
+    const name = (m.clients as { company_name: string } | null)?.company_name
+    if (!name) continue
     clientMap.set(name, (clientMap.get(name) ?? 0) + m.quantity)
   }
   const clientDispatchRows = Array.from(clientMap.entries())

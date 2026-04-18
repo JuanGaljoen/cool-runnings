@@ -62,15 +62,15 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   for (const m of list) {
     if (m.movement_type !== 'dispatch') continue
     const client = m.clients as { id: string; company_name: string } | null
-    const key = client?.id ?? 'unassigned'
-    if (!clientMap.has(key)) {
-      clientMap.set(key, {
-        client_id: client?.id ?? null,
-        client_name: client?.company_name ?? 'No client',
+    if (!client) continue
+    if (!clientMap.has(client.id)) {
+      clientMap.set(client.id, {
+        client_id: client.id,
+        client_name: client.company_name,
         dispatched: 0,
       })
     }
-    clientMap.get(key)!.dispatched += m.quantity
+    clientMap.get(client.id)!.dispatched += m.quantity
   }
   const clientDispatchRows = Array.from(clientMap.values()).sort(
     (a, b) => b.dispatched - a.dispatched
