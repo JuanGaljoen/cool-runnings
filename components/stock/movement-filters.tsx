@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { DateRangePicker } from '@/components/reports/date-range-picker'
 
 type Product = { id: string; name: string }
 type Client = { id: string; company_name: string }
@@ -16,9 +17,11 @@ type Client = { id: string; company_name: string }
 interface MovementFiltersProps {
   products: Product[]
   clients: Client[]
+  from?: Date
+  to?: Date
 }
 
-export function MovementFilters({ products, clients }: MovementFiltersProps) {
+export function MovementFilters({ products, clients, from, to }: MovementFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -42,10 +45,12 @@ export function MovementFilters({ products, clients }: MovementFiltersProps) {
     router.push(pathname)
   }
 
-  const hasFilters = type !== 'all' || productId !== 'all' || clientId !== 'all'
+  const hasFilters = type !== 'all' || productId !== 'all' || clientId !== 'all' || !!searchParams.get('from')
 
   return (
     <div className="flex flex-wrap items-center gap-3">
+      <DateRangePicker from={from} to={to} />
+
       <Select value={type} onValueChange={(v) => update('type', v)}>
         <SelectTrigger className="w-40">
           <SelectValue placeholder="All types" />

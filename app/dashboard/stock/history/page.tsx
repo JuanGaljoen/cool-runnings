@@ -1,3 +1,4 @@
+import { format, subDays } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { RecentMovementsTable } from '@/components/dashboard/recent-movements-table'
 import { MovementFilters } from '@/components/stock/movement-filters'
@@ -12,6 +13,8 @@ interface HistoryPageProps {
     type?: string
     product_id?: string
     client_id?: string
+    from?: string
+    to?: string
   }
 }
 
@@ -19,8 +22,14 @@ export default async function MovementHistoryPage({ searchParams }: HistoryPageP
   const supabase = await createClient()
 
   const page = Math.max(1, parseInt(searchParams.page ?? '1', 10))
-  const from = (page - 1) * PAGE_SIZE
-  const to = from + PAGE_SIZE - 1
+  const rangeFrom = (page - 1) * PAGE_SIZE
+  const rangeTo = rangeFrom + PAGE_SIZE - 1
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const fromStr = searchParams.from ?? format(subDays(new Date(), 29), 'yyyy-MM-dd')
+  const toStr = searchParams.to ?? todayStr
+  const fromDate = new Date(`${fromStr}T00:00:00`)
+  const toDate = new Date(`${toStr}T23:59:59`)
 
   const [productsResult, clientsResult] = await Promise.all([
     supabase.from('products').select('id, name').order('name'),
@@ -34,7 +43,7 @@ export default async function MovementHistoryPage({ searchParams }: HistoryPageP
       { count: 'exact' }
     )
     .order('created_at', { ascending: false })
-    .range(from, to)
+    .range(rangeFrom, rangeTo)
 
   if (searchParams.type && searchParams.type !== 'all') {
     query = query.eq('movement_type', searchParams.type as Enums<'movement_type'>)
@@ -45,6 +54,9 @@ export default async function MovementHistoryPage({ searchParams }: HistoryPageP
   if (searchParams.client_id && searchParams.client_id !== 'all') {
     query = query.eq('client_id', searchParams.client_id)
   }
+  query = query
+    .gte('created_at', fromDate.toISOString())
+    .lte('created_at', toDate.toISOString())
 
   const { data: movements, count } = await query
 
@@ -62,6 +74,8 @@ export default async function MovementHistoryPage({ searchParams }: HistoryPageP
       <MovementFilters
         products={productsResult.data ?? []}
         clients={clientsResult.data ?? []}
+        from={fromDate}
+        to={toDate}
       />
 
       <RecentMovementsTable movements={movements ?? []} />
