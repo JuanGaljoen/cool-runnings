@@ -2,6 +2,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -18,6 +19,16 @@ export type ProductSummary = {
 }
 
 export function SummaryTable({ rows }: { rows: ProductSummary[] }) {
+  const totals = rows.reduce(
+    (acc, r) => ({
+      produced: acc.produced + r.produced,
+      dispatched: acc.dispatched + r.dispatched,
+      adjusted: acc.adjusted + r.adjusted,
+      net_change: acc.net_change + r.net_change,
+    }),
+    { produced: 0, dispatched: 0, adjusted: 0, net_change: 0 }
+  )
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -64,6 +75,32 @@ export function SummaryTable({ rows }: { rows: ProductSummary[] }) {
             ))
           )}
         </TableBody>
+        {rows.length > 0 && (
+          <TableFooter>
+            <TableRow>
+              <TableCell className="font-semibold">Total</TableCell>
+              <TableCell className="text-right font-semibold text-green-700 dark:text-green-400">
+                +{totals.produced}
+              </TableCell>
+              <TableCell className="text-right font-semibold text-blue-700 dark:text-blue-400">
+                -{totals.dispatched}
+              </TableCell>
+              <TableCell className="text-right font-semibold text-amber-700 dark:text-amber-400">
+                -{totals.adjusted}
+              </TableCell>
+              <TableCell
+                className={cn(
+                  'text-right font-semibold',
+                  totals.net_change >= 0
+                    ? 'text-green-700 dark:text-green-400'
+                    : 'text-destructive'
+                )}
+              >
+                {totals.net_change >= 0 ? '+' : ''}{totals.net_change}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
     </div>
   )
