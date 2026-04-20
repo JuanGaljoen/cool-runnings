@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StockSummary } from '@/components/stock/stock-summary'
 import { MovementForm } from '@/components/stock/movement-form'
+import { ExportStockButton } from '@/components/stock/export-stock-button'
 import { Button } from '@/components/ui/button'
 
 export default async function StockPage() {
@@ -34,9 +35,12 @@ export default async function StockPage() {
             Current stock levels across all active products.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/dashboard/stock/history">View history</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportStockButton />
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/stock/history">View history</Link>
+          </Button>
+        </div>
       </div>
 
       <StockSummary products={productList} />
