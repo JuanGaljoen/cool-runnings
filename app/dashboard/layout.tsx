@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar'
+import { UserProvider } from '@/components/providers/user-provider'
 
 export default async function DashboardLayout({
   children,
@@ -17,24 +18,26 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('id, full_name, role')
     .eq('id', user.id)
     .single()
 
   const isAdmin = profile?.role === 'admin'
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardSidebar
-        fullName={profile?.full_name ?? null}
-        email={user.email ?? ''}
-        isAdmin={isAdmin}
-      />
+    <UserProvider profile={profile}>
+      <div className="min-h-screen bg-background">
+        <DashboardSidebar
+          fullName={profile?.full_name ?? null}
+          email={user.email ?? ''}
+          isAdmin={isAdmin}
+        />
 
-      {/* Offset for desktop sidebar and mobile top bar */}
-      <main className="md:pl-60 pt-14 md:pt-0 min-h-screen">
-        {children}
-      </main>
-    </div>
+        {/* Offset for desktop sidebar and mobile top bar */}
+        <main className="md:pl-60 pt-14 md:pt-0 min-h-screen">
+          {children}
+        </main>
+      </div>
+    </UserProvider>
   )
 }
