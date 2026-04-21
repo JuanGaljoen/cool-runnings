@@ -9,6 +9,9 @@ export async function exportMovementsCSV(
 ): Promise<{ csv: string | null; error: string | null }> {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { csv: null, error: 'Not authenticated' }
+
   const { data, error } = await supabase
     .from('stock_movements')
     .select('created_at, movement_type, quantity, note, adjustment_reason, products(name), profiles(full_name), clients(company_name)')

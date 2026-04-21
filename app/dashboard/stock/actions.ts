@@ -8,6 +8,9 @@ import { format } from 'date-fns'
 export async function exportStockLevelsCSV(): Promise<{ csv: string | null; filename: string; error: string | null }> {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { csv: null, filename: '', error: 'Not authenticated' }
+
   const { data, error } = await supabase
     .from('products')
     .select('name, sku, unit, low_stock_threshold, stock_levels(quantity)')
