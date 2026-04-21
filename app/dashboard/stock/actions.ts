@@ -49,7 +49,9 @@ export async function createMovement(
 
   if (!user) return { error: 'Not authenticated' }
 
-  const parsed = movementSchema.parse(values)
+  const result = movementSchema.safeParse(values)
+  if (!result.success) return { error: result.error.issues[0].message }
+  const parsed = result.data
 
   if (parsed.movement_type === 'dispatch' || parsed.movement_type === 'adjustment') {
     const { data: level } = await supabase

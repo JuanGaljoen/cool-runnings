@@ -8,9 +8,10 @@ export async function createProduct(
   values: ProductFormValues
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const parsed = productSchema.parse(values)
+  const result = productSchema.safeParse(values)
+  if (!result.success) return { error: result.error.issues[0].message }
 
-  const { error } = await supabase.from('products').insert(parsed)
+  const { error } = await supabase.from('products').insert(result.data)
   if (error) return { error: error.message }
 
   revalidatePath('/dashboard/products')
@@ -22,11 +23,12 @@ export async function updateProduct(
   values: ProductFormValues
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const parsed = productSchema.parse(values)
+  const result = productSchema.safeParse(values)
+  if (!result.success) return { error: result.error.issues[0].message }
 
   const { error } = await supabase
     .from('products')
-    .update(parsed)
+    .update(result.data)
     .eq('id', id)
   if (error) return { error: error.message }
 
