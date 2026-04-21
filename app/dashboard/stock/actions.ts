@@ -75,7 +75,12 @@ export async function createMovement(
     client_id: parsed.client_id ?? null,
   })
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.message.includes('stock_non_negative')) {
+      return { error: 'Insufficient stock for this movement' }
+    }
+    return { error: error.message }
+  }
 
   revalidatePath('/dashboard/stock')
   return { error: null }
