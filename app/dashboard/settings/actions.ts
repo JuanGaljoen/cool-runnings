@@ -10,6 +10,9 @@ import type { Enums } from '@/types/database'
 export async function inviteUser(
   values: { email: string }
 ): Promise<{ error: string | null }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
   const parsed = inviteSchema.safeParse(values)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
