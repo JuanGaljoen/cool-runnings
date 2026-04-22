@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { format } from 'date-fns'
 import { ADJUSTMENT_REASONS } from '@/lib/schemas/movement'
 
 export async function exportMovementsCSV(
@@ -26,7 +27,7 @@ export async function exportMovementsCSV(
     ...(data ?? []).map((m) => {
       const reason = ADJUSTMENT_REASONS.find((r) => r.value === m.adjustment_reason)?.label ?? ''
       return [
-        new Date(m.created_at).toLocaleString('en-ZA'),
+        format(new Date(m.created_at), 'yyyy/MM/dd, HH:mm:ss'),
         (m.products as { name: string } | null)?.name ?? '',
         m.movement_type,
         String(m.quantity),
