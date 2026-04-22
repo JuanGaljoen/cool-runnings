@@ -13,6 +13,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Plus, Pencil, ArchiveRestore, Archive } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog'
 import { ClientDialog } from './client-dialog'
 import { toggleClientActive } from '@/app/dashboard/clients/actions'
 import { useUser } from '@/components/providers/user-provider'
@@ -26,6 +34,8 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [archiveClient, setArchiveClient] = useState<Client | null>(null)
+  const [archiving, setArchiving] = useState(false)
 
   function openAdd() {
     setSelectedClient(null)
@@ -38,9 +48,23 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
   }
 
   async function handleToggleActive(client: Client) {
-    const result = await toggleClientActive(client.id, !client.is_active)
+    if (client.is_active) {
+      setArchiveClient(client)
+      return
+    }
+    const result = await toggleClientActive(client.id, true)
     if (result.error) toast.error(result.error)
-    else toast.success(client.is_active ? 'Client archived' : 'Client restored')
+    else toast.success('Client restored')
+  }
+
+  async function confirmArchive() {
+    if (!archiveClient) return
+    setArchiving(true)
+    const result = await toggleClientActive(archiveClient.id, false)
+    setArchiving(false)
+    if (result.error) toast.error(result.error)
+    else toast.success('Client archived')
+    setArchiveClient(null)
   }
 
   return (
@@ -128,6 +152,25 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
           client={selectedClient}
         />
       )}
+
+      <Dialog open={!!archiveClient} onOpenChange={(open) => { if (!open) setArchiveClient(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Archive client</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to archive <span className="font-medium text-foreground">{archiveClient?.company_name}</span>? They will no longer appear in dispatch forms.
+          </p>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button variant="destructive" onClick={confirmArchive} disabled={archiving}>
+              {archiving ? 'Archiving…' : 'Archive'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
