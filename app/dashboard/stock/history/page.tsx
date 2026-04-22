@@ -26,10 +26,13 @@ export default async function MovementHistoryPage({ searchParams }: HistoryPageP
   const rangeTo = rangeFrom + PAGE_SIZE - 1
 
   const todayStr = format(new Date(), 'yyyy-MM-dd')
-  const fromStr = searchParams.from ?? format(subDays(new Date(), 29), 'yyyy-MM-dd')
-  const toStr = searchParams.to ?? todayStr
-  const fromDate = new Date(`${fromStr}T00:00:00`)
-  const toDate = new Date(`${toStr}T23:59:59`)
+  const defaultFrom = format(subDays(new Date(), 29), 'yyyy-MM-dd')
+  const rawFrom = new Date(`${searchParams.from ?? defaultFrom}T00:00:00`)
+  const rawTo = new Date(`${searchParams.to ?? todayStr}T23:59:59`)
+  const fromStr = isNaN(rawFrom.getTime()) ? defaultFrom : (searchParams.from ?? defaultFrom)
+  const toStr = isNaN(rawTo.getTime()) ? todayStr : (searchParams.to ?? todayStr)
+  const fromDate = isNaN(rawFrom.getTime()) ? new Date(`${defaultFrom}T00:00:00`) : rawFrom
+  const toDate = isNaN(rawTo.getTime()) ? new Date(`${todayStr}T23:59:59`) : rawTo
 
   const [productsResult, clientsResult] = await Promise.all([
     supabase.from('products').select('id, name').order('name'),

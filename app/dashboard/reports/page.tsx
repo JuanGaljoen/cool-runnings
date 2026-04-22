@@ -14,12 +14,15 @@ interface ReportsPageProps {
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const DEFAULT_RANGE_DAYS = 30
   const todayStr = format(new Date(), 'yyyy-MM-dd')
-  const fromStr = searchParams.from ?? format(subDays(new Date(), DEFAULT_RANGE_DAYS - 1), 'yyyy-MM-dd')
-  const toStr = searchParams.to ?? todayStr
+  const defaultFrom = format(subDays(new Date(), DEFAULT_RANGE_DAYS - 1), 'yyyy-MM-dd')
+  const rawFrom = new Date(`${searchParams.from ?? defaultFrom}T12:00:00.000Z`)
+  const rawTo = new Date(`${searchParams.to ?? todayStr}T12:00:00.000Z`)
+  const fromStr = isNaN(rawFrom.getTime()) ? defaultFrom : (searchParams.from ?? defaultFrom)
+  const toStr = isNaN(rawTo.getTime()) ? todayStr : (searchParams.to ?? todayStr)
 
   // Use noon UTC to safely represent each date regardless of server timezone
-  const fromDate = new Date(`${fromStr}T12:00:00.000Z`)
-  const toDate = new Date(`${toStr}T12:00:00.000Z`)
+  const fromDate = isNaN(rawFrom.getTime()) ? new Date(`${defaultFrom}T12:00:00.000Z`) : rawFrom
+  const toDate = isNaN(rawTo.getTime()) ? new Date(`${todayStr}T12:00:00.000Z`) : rawTo
 
   const supabase = await createClient()
 
