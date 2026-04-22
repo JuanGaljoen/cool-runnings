@@ -69,10 +69,10 @@ export async function deleteUser(
 
   const adminClient = createAdminClient()
 
-  await adminClient.from('profiles').delete().eq('id', userId)
-
   const { error } = await adminClient.auth.admin.deleteUser(userId)
   if (error) return { error: error.message }
+
+  await adminClient.from('profiles').delete().eq('id', userId)
 
   revalidatePath('/dashboard/settings')
   return { error: null }
