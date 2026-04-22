@@ -22,7 +22,8 @@ export async function exportStockLevelsCSV(): Promise<{ csv: string | null; file
   const rows = [
     ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status'],
     ...(data ?? []).map((p) => {
-      const quantity = (p.stock_levels as { quantity: number } | null)?.quantity ?? 0
+      const sl = p.stock_levels as { quantity: number } | { quantity: number }[] | null
+      const quantity = Array.isArray(sl) ? sl[0]?.quantity ?? 0 : sl?.quantity ?? 0
       const status = quantity === 0 ? 'Out of stock' : quantity < p.low_stock_threshold ? 'Low stock' : 'OK'
       return [
         p.name,

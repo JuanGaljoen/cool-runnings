@@ -14,7 +14,7 @@ type ProductWithStock = {
   sku: string
   unit: string
   low_stock_threshold: number
-  stock_levels: { quantity: number } | null
+  stock_levels: { quantity: number } | { quantity: number }[] | null
 }
 
 interface StockSummaryProps {
@@ -43,7 +43,8 @@ export function StockSummary({ products }: StockSummaryProps) {
             </TableRow>
           ) : (
             products.map((product) => {
-              const quantity = product.stock_levels?.quantity ?? 0
+              const sl = product.stock_levels
+              const quantity = Array.isArray(sl) ? sl[0]?.quantity ?? 0 : sl?.quantity ?? 0
               const isLow = quantity < product.low_stock_threshold
 
               return (

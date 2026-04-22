@@ -74,12 +74,16 @@ export default async function DashboardPage() {
   const clients = clientsResult.data ?? []
 
   // Stat cards
+  function getQty(sl: { quantity: number } | { quantity: number }[] | null) {
+    return Array.isArray(sl) ? sl[0]?.quantity ?? 0 : sl?.quantity ?? 0
+  }
+
   const totalStock = products.reduce(
-    (sum, p) => sum + (p.stock_levels?.quantity ?? 0),
+    (sum, p) => sum + getQty(p.stock_levels),
     0
   )
   const lowStockCount = products.filter(
-    (p) => (p.stock_levels?.quantity ?? 0) < p.low_stock_threshold
+    (p) => getQty(p.stock_levels) < p.low_stock_threshold
   ).length
   const producedToday = todayMovements
     .filter((m) => m.movement_type === 'production')
