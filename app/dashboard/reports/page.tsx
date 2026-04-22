@@ -8,10 +8,11 @@ import { ExportButton } from '@/components/reports/export-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface ReportsPageProps {
-  searchParams: { from?: string; to?: string }
+  searchParams: Promise<{ from?: string; to?: string }>
 }
 
-export default async function ReportsPage({ searchParams }: ReportsPageProps) {
+export default async function ReportsPage({ searchParams: searchParamsPromise }: ReportsPageProps) {
+  const searchParams = await searchParamsPromise
   const DEFAULT_RANGE_DAYS = 30
   const todayStr = format(new Date(), 'yyyy-MM-dd')
   const defaultFrom = format(subDays(new Date(), DEFAULT_RANGE_DAYS - 1), 'yyyy-MM-dd')

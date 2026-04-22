@@ -8,17 +8,18 @@ import type { Enums } from '@/types/database'
 const PAGE_SIZE = 25
 
 interface HistoryPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string
     type?: string
     product_id?: string
     client_id?: string
     from?: string
     to?: string
-  }
+  }>
 }
 
-export default async function MovementHistoryPage({ searchParams }: HistoryPageProps) {
+export default async function MovementHistoryPage({ searchParams: searchParamsPromise }: HistoryPageProps) {
+  const searchParams = await searchParamsPromise
   const supabase = await createClient()
 
   const page = Math.max(1, parseInt(searchParams.page ?? '1', 10))
