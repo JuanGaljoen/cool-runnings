@@ -1,88 +1,78 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { movementSchema, type MovementFormValues } from '@/lib/schemas/movement'
 import { format } from 'date-fns'
+import { protectedAction, validate } from '@/lib/auth-helpers'
+import { movementSchema, type MovementFormValues } from '@/lib/schemas/movement'
 
 export async function exportStockLevelsCSV(): Promise<{ csv: string | null; filename: string; error: string | null }> {
-  const supabase = await createClient()
+  return protectedAction(async ({ supabase }) => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('name, sku, unit, low_stock_threshold, stock_levels(quantity)')
+      .eq('is_active', true)
+      .order('name')
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { csv: null, filename: '', error: 'Not authenticated' }
+    if (error) return { csv: null, filename: '', error: error.message }
 
-  const { data, error } = await supabase
-    .from('products')
-    .select('name, sku, unit, low_stock_threshold, stock_levels(quantity)')
-    .eq('is_active', true)
-    .order('name')
+    const rows = [
+      ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status'],
+      ...(data ?? []).map((p) => {
+        const sl = p.stock_levels as { quantity: number } | { quantity: number }[] | null
+        const quantity = Array.isArray(sl) ? sl[0]?.quantity ?? 0 : sl?.quantity ?? 0
+        const status = quantity === 0 ? 'Out of stock' : quantity < p.low_stock_threshold ? 'Low stock' : 'OK'
+        return [
+          p.name,
+          p.sku,
+          p.unit,
+          String(quantity),
+          String(p.low_stock_threshold),
+          status,
+        ]
+      }),
+    ]
 
-  if (error) return { csv: null, filename: '', error: error.message }
+    const csv = rows.map((r) => r.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n')
+    const filename = `stock-levels-${format(new Date(), 'yyyy-MM-dd')}.csv`
 
-  const rows = [
-    ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status'],
-    ...(data ?? []).map((p) => {
-      const sl = p.stock_levels as { quantity: number } | { quantity: number }[] | null
-      const quantity = Array.isArray(sl) ? sl[0]?.quantity ?? 0 : sl?.quantity ?? 0
-      const status = quantity === 0 ? 'Out of stock' : quantity < p.low_stock_threshold ? 'Low stock' : 'OK'
-      return [
-        p.name,
-        p.sku,
-        p.unit,
-        String(quantity),
-        String(p.low_stock_threshold),
-        status,
-      ]
-    }),
-  ]
-
-  const csv = rows.map((r) => r.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n')
-  const filename = `stock-levels-${format(new Date(), 'yyyy-MM-dd')}.csv`
-
-  return { csv, filename, error: null }
+    return { csv, filename, error: null }
+  })
 }
 
 export async function createMovement(
   values: MovementFormValues
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
+  return protectedAction(async ({ supabase, user }) => {
+    const parsed = validate(movementSchema, values)
+    if (!parsed.success) return { error: parsed.error }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    if (parsed.data.movement_type === 'dispatch' || parsed.data.movement_type === 'adjustment') {
+      const { data: level } = await supabase
+        .from('stock_levels')
+        .select('quantity')
+        .eq('product_id', parsed.data.product_id)
+        .single()
 
-  if (!user) return { error: 'Not authenticated' }
-
-  const result = movementSchema.safeParse(values)
-  if (!result.success) return { error: result.error.issues[0].message }
-  const parsed = result.data
-
-  if (parsed.movement_type === 'dispatch' || parsed.movement_type === 'adjustment') {
-    const { data: level } = await supabase
-      .from('stock_levels')
-      .select('quantity')
-      .eq('product_id', parsed.product_id)
-      .single()
-
-    const available = level?.quantity ?? 0
-    if (parsed.quantity > available) {
-      return { error: `Insufficient stock — only ${available} unit(s) available` }
+      const available = level?.quantity ?? 0
+      if (parsed.data.quantity > available) {
+        return { error: `Insufficient stock — only ${available} unit(s) available` }
+      }
     }
-  }
 
-  const { error } = await supabase.from('stock_movements').insert({
-    ...parsed,
-    created_by: user.id,
-    client_id: parsed.client_id ?? null,
+    const { error } = await supabase.from('stock_movements').insert({
+      ...parsed.data,
+      created_by: user.id,
+      client_id: parsed.data.client_id ?? null,
+    })
+
+    if (error) {
+      if (error.message.includes('stock_non_negative')) {
+        return { error: 'Insufficient stock for this movement' }
+      }
+      return { error: error.message }
+    }
+
+    revalidatePath('/dashboard/stock')
+    return { error: null }
   })
-
-  if (error) {
-    if (error.message.includes('stock_non_negative')) {
-      return { error: 'Insufficient stock for this movement' }
-    }
-    return { error: error.message }
-  }
-
-  revalidatePath('/dashboard/stock')
-  return { error: null }
 }
