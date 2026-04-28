@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "set -o pipefail; npx tsc --noEmit --pretty | head -20 >&2",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
