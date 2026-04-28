@@ -17,19 +17,22 @@ Built and hosted by the developer on behalf of the client.
 ## Folder structure
 ```
 /app
-  /login              # Public auth page
+  /login              # Public auth page (+ actions.ts)
   /dashboard          # Protected — all app pages live here
     /page.tsx         # Main dashboard (stock overview + recent movements)
-    /stock            # Record production runs, dispatches, adjustments
-    /products         # Product catalogue CRUD
-    /reports          # Date-range reports + CSV export
-    /settings         # Admin only — user management
+    /stock            # Record production runs, dispatches, adjustments (+ actions.ts)
+    /products         # Product catalogue CRUD (+ actions.ts)
+    /clients          # Client CRUD — referenced by dispatch movements (+ actions.ts)
+    /reports          # Date-range reports + CSV export (+ actions.ts)
+    /settings         # Admin only — user management (+ actions.ts)
     /layout.tsx       # Persistent nav layout for all dashboard pages
 /components           # Shared UI components
 /lib
-  /supabase           # Supabase client (browser + server + middleware)
-  /actions            # Server actions
-  /helpers            # Utility functions
+  /supabase           # Supabase clients (admin, browser, server, middleware)
+  /schemas            # Shared zod schemas (product, movement, invite, client)
+  auth-helpers.ts     # protectedAction / adminAction / validate wrappers
+  movement-constants.ts
+  utils.ts
 /types                # TypeScript interfaces and enums
 ```
 
@@ -74,7 +77,8 @@ Full audit log of every stock change.
 - dispatch → subtract quantity
 - adjustment → subtract quantity
 
-### clients (Phase 2 — do not build yet, table exists in DB)
+### clients
+Internal CRUD for the customers staff dispatch ice to. Dispatch movements require a client.
 - id, company_name, contact_name, email, phone, is_active, created_at
 
 ### orders (Phase 2 — do not build yet, table exists in DB)
@@ -102,7 +106,8 @@ Full audit log of every stock change.
 - Database: snake_case for all table and column names.
 - TypeScript: camelCase for variables and functions, PascalCase for components and types.
 - Files: kebab-case for filenames (e.g. stock-movements.tsx).
-- Server actions live in /lib/actions and are named verb-noun (e.g. createProduct, recordMovement).
+- Server actions are co-located with their feature route as `actions.ts` (e.g. `app/dashboard/products/actions.ts`) and named verb-noun (e.g. createProduct, recordMovement).
+- Wrap server actions with `protectedAction` / `adminAction` from `lib/auth-helpers.ts` to enforce auth and role checks consistently. Use the `validate` helper for zod input parsing.
 
 ## UI conventions
 - Use shadcn/ui components throughout. Do not use other component libraries.
@@ -114,10 +119,11 @@ Full audit log of every stock change.
 - The app must be mobile-responsive — the sidebar collapses to a hamburger on small screens.
 
 ## Phase 2 (do not build — for context only)
-Phase 2 adds a client-facing order portal. Clients register and log in separately, 
+Phase 2 adds a client-facing order portal. Clients register and log in separately,
 place orders, and track order status. Stock deducts automatically on dispatch.
-The clients, orders, and order_items tables are already in the DB schema so Phase 2 
-requires no breaking changes to the data model.
+The orders and order_items tables are already in the DB schema so Phase 2
+requires no breaking changes to the data model. (The clients table is already
+in active use by the internal dispatch workflow.)
 
 ## What NOT to do
 - Do not use the Pages Router — App Router only.
