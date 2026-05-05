@@ -39,6 +39,7 @@ const defaultValues: ProductFormValues = {
   unit: '',
   low_stock_threshold: 0,
   is_active: true,
+  unit_price: 0,
 }
 
 export function ProductDialog({
@@ -61,6 +62,7 @@ export function ProductDialog({
         unit: product.unit,
         low_stock_threshold: product.low_stock_threshold,
         is_active: product.is_active,
+        unit_price: product.unit_price,
       })
     } else {
       form.reset(defaultValues)

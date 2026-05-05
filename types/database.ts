@@ -16,31 +16,31 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
-          id: string
           company_name: string
           contact_name: string | null
-          email: string | null
-          phone: string | null
-          is_active: boolean
           created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          phone: string | null
         }
         Insert: {
-          id?: string
           company_name: string
           contact_name?: string | null
-          email?: string | null
-          phone?: string | null
-          is_active?: boolean
           created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          phone?: string | null
         }
         Update: {
-          id?: string
           company_name?: string
           contact_name?: string | null
-          email?: string | null
-          phone?: string | null
-          is_active?: boolean
           created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          phone?: string | null
         }
         Relationships: []
       }
@@ -53,6 +53,7 @@ export type Database = {
           name: string
           sku: string
           unit: string
+          unit_price: number
           updated_at: string
         }
         Insert: {
@@ -63,6 +64,7 @@ export type Database = {
           name: string
           sku: string
           unit: string
+          unit_price?: number
           updated_at?: string
         }
         Update: {
@@ -73,6 +75,7 @@ export type Database = {
           name?: string
           sku?: string
           unit?: string
+          unit_price?: number
           updated_at?: string
         }
         Relationships: []
@@ -132,6 +135,8 @@ export type Database = {
       }
       stock_movements: {
         Row: {
+          adjustment_reason: string | null
+          client_id: string | null
           created_at: string
           created_by: string
           id: string
@@ -139,10 +144,10 @@ export type Database = {
           note: string | null
           product_id: string
           quantity: number
-          client_id: string | null
-          adjustment_reason: string | null
         }
         Insert: {
+          adjustment_reason?: string | null
+          client_id?: string | null
           created_at?: string
           created_by: string
           id?: string
@@ -150,10 +155,10 @@ export type Database = {
           note?: string | null
           product_id: string
           quantity: number
-          client_id?: string | null
-          adjustment_reason?: string | null
         }
         Update: {
+          adjustment_reason?: string | null
+          client_id?: string | null
           created_at?: string
           created_by?: string
           id?: string
@@ -161,10 +166,15 @@ export type Database = {
           note?: string | null
           product_id?: string
           quantity?: number
-          client_id?: string | null
-          adjustment_reason?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stock_movements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stock_movements_created_by_fkey"
             columns: ["created_by"]
@@ -177,13 +187,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_movements_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
