@@ -6,22 +6,42 @@ import { protectedAction, validate } from '@/lib/auth-helpers'
 import { movementSchema, type MovementFormValues } from '@/lib/schemas/movement'
 
 export async function exportStockLevelsCSV(): Promise<{ csv: string | null; filename: string; error: string | null }> {
-  return protectedAction(async ({ supabase }) => {
-    const { data, error } = await supabase
+  return protectedAction(async ({ supabase, user }) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    const isAdmin = profile?.role === 'admin'
+
+    const adminQuery = supabase
+      .from('products')
+      .select('name, sku, unit, low_stock_threshold, unit_price, stock_levels(quantity)')
+      .eq('is_active', true)
+      .order('name')
+
+    const staffQuery = supabase
       .from('products')
       .select('name, sku, unit, low_stock_threshold, stock_levels(quantity)')
       .eq('is_active', true)
       .order('name')
 
+    const { data, error } = isAdmin ? await adminQuery : await staffQuery
+
     if (error) return { csv: null, filename: '', error: error.message }
 
+    const header = isAdmin
+      ? ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status', 'Unit Price (ZAR)', 'Stock Value (ZAR)']
+      : ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status']
+
     const rows = [
-      ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status'],
+      header,
       ...(data ?? []).map((p) => {
         const sl = p.stock_levels as { quantity: number } | { quantity: number }[] | null
         const quantity = Array.isArray(sl) ? sl[0]?.quantity ?? 0 : sl?.quantity ?? 0
         const status = quantity === 0 ? 'Out of stock' : quantity < p.low_stock_threshold ? 'Low stock' : 'OK'
-        return [
+
+        const baseRow = [
           p.name,
           p.sku,
           p.unit,
@@ -29,6 +49,19 @@ export async function exportStockLevelsCSV(): Promise<{ csv: string | null; file
           String(p.low_stock_threshold),
           status,
         ]
+
+        if (isAdmin) {
+          const unitPrice = Number(
+            (p as { unit_price?: number | string }).unit_price ?? 0
+          )
+          return [
+            ...baseRow,
+            unitPrice.toFixed(2),
+            (quantity * unitPrice).toFixed(2),
+          ]
+        }
+
+        return baseRow
       }),
     ]
 

@@ -25,7 +25,7 @@ import { productSchema, type ProductFormValues } from '@/lib/schemas/product'
 import { createProduct, updateProduct } from '@/app/dashboard/products/actions'
 import type { Tables } from '@/types/database'
 
-type Product = Tables<'products'>
+type Product = Omit<Tables<'products'>, 'unit_price'> & { unit_price?: number }
 
 interface ProductDialogProps {
   open: boolean
@@ -62,7 +62,7 @@ export function ProductDialog({
         unit: product.unit,
         low_stock_threshold: product.low_stock_threshold,
         is_active: product.is_active,
-        unit_price: product.unit_price,
+        unit_price: product.unit_price ?? 0,
       })
     } else {
       form.reset(defaultValues)
@@ -138,19 +138,41 @@ export function ProductDialog({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="low_stock_threshold"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Low stock threshold</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={0} {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="low_stock_threshold"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Low stock threshold</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={0} {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unit_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price (ZAR)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
