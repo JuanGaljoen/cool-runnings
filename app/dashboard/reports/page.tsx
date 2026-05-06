@@ -6,6 +6,21 @@ import { MovementChart, type ChartDataPoint } from '@/components/reports/movemen
 import { ClientDispatchTable, type ClientDispatchRow } from '@/components/reports/client-dispatch-table'
 import { ExportButton } from '@/components/reports/export-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatZAR } from '@/lib/utils'
+
+interface RevenueByProduct {
+  product_id: string
+  product_name: string
+  dispatched: number
+  revenue: number
+}
+
+interface RevenueByClient {
+  client_id: string
+  client_name: string
+  dispatched: number
+  revenue: number
+}
 
 interface ReportsPageProps {
   searchParams: Promise<{ from?: string; to?: string }>
@@ -27,6 +42,12 @@ export default async function ReportsPage({ searchParams: searchParamsPromise }:
 
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+    : { data: null }
+  const isAdmin = profile?.role === 'admin'
+
   const { data: movements } = await supabase
     .from('stock_movements')
     .select('id, movement_type, quantity, created_at, products(id, name), clients(id, company_name)')
@@ -35,6 +56,55 @@ export default async function ReportsPage({ searchParams: searchParamsPromise }:
     .order('created_at')
 
   const list = movements ?? []
+
+  // Admin-only: compute revenue from dispatches × current product unit_price
+  let revenueByProduct: RevenueByProduct[] = []
+  let revenueByClient: RevenueByClient[] = []
+  let revenueTotal = 0
+  if (isAdmin) {
+    const { data: priced } = await supabase
+      .from('stock_movements')
+      .select('quantity, products(id, name, unit_price), clients(id, company_name)')
+      .eq('movement_type', 'dispatch')
+      .gte('created_at', `${fromStr}T00:00:00.000Z`)
+      .lte('created_at', `${toStr}T23:59:59.999Z`)
+
+    const productAcc = new Map<string, RevenueByProduct>()
+    const clientAcc = new Map<string, RevenueByClient>()
+
+    for (const d of priced ?? []) {
+      const product = d.products as { id: string; name: string; unit_price: number } | null
+      if (!product) continue
+      const revenue = d.quantity * Number(product.unit_price)
+      revenueTotal += revenue
+
+      const pRow = productAcc.get(product.id) ?? {
+        product_id: product.id,
+        product_name: product.name,
+        dispatched: 0,
+        revenue: 0,
+      }
+      pRow.dispatched += d.quantity
+      pRow.revenue += revenue
+      productAcc.set(product.id, pRow)
+
+      const client = d.clients as { id: string; company_name: string } | null
+      if (client) {
+        const cRow = clientAcc.get(client.id) ?? {
+          client_id: client.id,
+          client_name: client.company_name,
+          dispatched: 0,
+          revenue: 0,
+        }
+        cRow.dispatched += d.quantity
+        cRow.revenue += revenue
+        clientAcc.set(client.id, cRow)
+      }
+    }
+
+    revenueByProduct = Array.from(productAcc.values()).sort((a, b) => b.revenue - a.revenue)
+    revenueByClient = Array.from(clientAcc.values()).sort((a, b) => b.revenue - a.revenue)
+  }
 
   // Aggregate by product
   const productMap = new Map<string, ProductSummary>()
@@ -137,6 +207,76 @@ export default async function ReportsPage({ searchParams: searchParamsPromise }:
           <MovementChart data={chartData} />
         </CardContent>
       </Card>
+
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Revenue summary
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                Total: {formatZAR(revenueTotal)}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-0">
+            <div>
+              <h3 className="text-sm font-medium mb-2">By product</h3>
+              {revenueByProduct.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No dispatches in selected period.</p>
+              ) : (
+                <div className="rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-medium">Product</th>
+                        <th className="text-right px-3 py-2 font-medium">Dispatched</th>
+                        <th className="text-right px-3 py-2 font-medium">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {revenueByProduct.map((r) => (
+                        <tr key={r.product_id} className="border-t">
+                          <td className="px-3 py-2">{r.product_name}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{r.dispatched}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{formatZAR(r.revenue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium mb-2">By client</h3>
+              {revenueByClient.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No client dispatches in selected period.</p>
+              ) : (
+                <div className="rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-medium">Client</th>
+                        <th className="text-right px-3 py-2 font-medium">Dispatched</th>
+                        <th className="text-right px-3 py-2 font-medium">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {revenueByClient.map((r) => (
+                        <tr key={r.client_id} className="border-t">
+                          <td className="px-3 py-2">{r.client_name}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{r.dispatched}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{formatZAR(r.revenue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

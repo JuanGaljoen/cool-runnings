@@ -21,7 +21,7 @@ import { MoreHorizontal } from 'lucide-react'
 import { archiveProduct } from '@/app/dashboard/products/actions'
 import type { Tables } from '@/types/database'
 
-type Product = Tables<'products'>
+type Product = Omit<Tables<'products'>, 'unit_price'> & { unit_price?: number }
 
 interface ProductRowActionsProps {
   product: Product

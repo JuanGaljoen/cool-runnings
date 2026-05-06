@@ -14,18 +14,17 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import { Plus } from 'lucide-react'
 import { ProductDialog } from './product-dialog'
 import { ProductRowActions } from './product-row-actions'
-import { useUser } from '@/components/providers/user-provider'
+import { formatZAR } from '@/lib/utils'
 import type { Tables } from '@/types/database'
 
-type Product = Tables<'products'>
+type Product = Omit<Tables<'products'>, 'unit_price'> & { unit_price?: number }
 
 interface ProductsTableProps {
   products: Product[]
+  isAdmin: boolean
 }
 
-export function ProductsTable({ products }: ProductsTableProps) {
-  const { profile } = useUser()
-  const isAdmin = profile?.role === 'admin'
+export function ProductsTable({ products, isAdmin }: ProductsTableProps) {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -65,6 +64,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
               <TableHead>SKU</TableHead>
               <TableHead>Unit</TableHead>
               <TableHead>Low stock threshold</TableHead>
+              {isAdmin && <TableHead className="text-right">Price</TableHead>}
               <TableHead>Status</TableHead>
               {isAdmin && (
                 <TableHead className="w-[60px]" />
@@ -75,7 +75,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
             {products.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={isAdmin ? 6 : 5}
+                  colSpan={isAdmin ? 7 : 5}
                   className="text-center text-muted-foreground py-10"
                 >
                   No products yet.
@@ -88,6 +88,11 @@ export function ProductsTable({ products }: ProductsTableProps) {
                   <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                   <TableCell>{product.unit}</TableCell>
                   <TableCell>{product.low_stock_threshold}</TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right tabular-nums">
+                      {formatZAR(product.unit_price ?? 0)}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <StatusBadge isActive={product.is_active} />
                   </TableCell>
