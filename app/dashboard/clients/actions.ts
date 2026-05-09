@@ -18,6 +18,7 @@ export async function createClientAction(
       contact_name: parsed.data.contact_name || null,
       email: parsed.data.email || null,
       phone: parsed.data.phone || null,
+      rep_id: parsed.data.rep_id || null,
     })
 
     if (error) return { error: error.message }
@@ -42,6 +43,7 @@ export async function updateClientAction(
         contact_name: parsed.data.contact_name || null,
         email: parsed.data.email || null,
         phone: parsed.data.phone || null,
+        rep_id: parsed.data.rep_id || null,
       })
       .eq('id', id)
 

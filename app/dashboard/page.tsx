@@ -9,9 +9,17 @@ import { StockSummary } from '@/components/stock/stock-summary'
 import { MovementChart, type ChartDataPoint } from '@/components/reports/movement-chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { formatZAR } from '@/lib/utils'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('role, commission_per_unit').eq('id', user.id).single()
+    : { data: null }
+  const isRep = profile?.role === 'rep'
+  const commissionRate = Number(profile?.commission_per_unit ?? 0)
 
   const now = new Date()
   const startOfToday = new Date(now)
@@ -19,6 +27,32 @@ export default async function DashboardPage() {
 
   const sevenDaysAgo = subDays(now, 6)
   sevenDaysAgo.setHours(0, 0, 0, 0)
+
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  // Rep-only: this-month dispatches to clients assigned to this rep
+  let repBagsThisMonth = 0
+  let repCommissionRows: Array<{ client_id: string; client_name: string; bags: number }> = []
+  if (isRep && user) {
+    const { data: repDispatches } = await supabase
+      .from('stock_movements')
+      .select('quantity, clients!inner(id, company_name, rep_id)')
+      .eq('movement_type', 'dispatch')
+      .gte('created_at', startOfMonth.toISOString())
+      .eq('clients.rep_id', user.id)
+
+    const acc = new Map<string, { client_id: string; client_name: string; bags: number }>()
+    for (const m of repDispatches ?? []) {
+      const c = m.clients as { id: string; company_name: string; rep_id: string } | null
+      if (!c) continue
+      repBagsThisMonth += m.quantity
+      const row = acc.get(c.id) ?? { client_id: c.id, client_name: c.company_name, bags: 0 }
+      row.bags += m.quantity
+      acc.set(c.id, row)
+    }
+    repCommissionRows = Array.from(acc.values()).sort((a, b) => b.bags - a.bags)
+  }
+  const repCommissionThisMonth = repBagsThisMonth * commissionRate
 
   const [
     productsResult,
@@ -130,11 +164,54 @@ export default async function DashboardPage() {
             Overview of your inventory.
           </p>
         </div>
-        <QuickRecordSheet
-          products={products.map((p) => ({ id: p.id, name: p.name }))}
-          clients={clients}
-        />
+        {!isRep && (
+          <QuickRecordSheet
+            products={products.map((p) => ({ id: p.id, name: p.name }))}
+            clients={clients}
+          />
+        )}
       </div>
+
+      {isRep && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              My commission — this month
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                {repBagsThisMonth} bag{repBagsThisMonth === 1 ? '' : 's'} · {formatZAR(repCommissionThisMonth)}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {repCommissionRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No dispatches to your clients this month.</p>
+            ) : (
+              <div className="rounded-md border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left px-3 py-2 font-medium">Client</th>
+                      <th className="text-right px-3 py-2 font-medium">Bags</th>
+                      <th className="text-right px-3 py-2 font-medium">Commission</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {repCommissionRows.map((r) => (
+                      <tr key={r.client_id} className="border-t">
+                        <td className="px-3 py-2">{r.client_name}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{r.bags}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {formatZAR(r.bags * commissionRate)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

@@ -76,6 +76,15 @@ export async function createMovement(
   values: MovementFormValues
 ): Promise<{ error: string | null }> {
   return protectedAction(async ({ supabase, user }) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (profile?.role === 'rep') {
+      return { error: 'Reps are read-only and cannot record movements' }
+    }
+
     const parsed = validate(movementSchema, values)
     if (!parsed.success) return { error: parsed.error }
 

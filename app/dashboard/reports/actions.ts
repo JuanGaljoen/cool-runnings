@@ -18,7 +18,7 @@ export async function exportMovementsCSV(
 
     const adminQuery = supabase
       .from('stock_movements')
-      .select('created_at, movement_type, quantity, note, adjustment_reason, products(name, unit_price), profiles(full_name), clients(company_name)')
+      .select('created_at, movement_type, quantity, note, adjustment_reason, products(name, unit_price), profiles(full_name), clients(company_name, rep_id)')
       .gte('created_at', `${from}T00:00:00`)
       .lte('created_at', `${to}T23:59:59`)
       .order('created_at', { ascending: false })
@@ -34,8 +34,32 @@ export async function exportMovementsCSV(
 
     if (error) return { csv: null, error: error.message }
 
+    // Build rep_id → { name, commission_per_unit } map for admin CSVs
+    const repInfo = new Map<string, { name: string; rate: number }>()
+    if (isAdmin) {
+      const repIds = Array.from(
+        new Set(
+          (data ?? [])
+            .map((m) => (m.clients as { rep_id?: string | null } | null)?.rep_id)
+            .filter((id): id is string => !!id)
+        )
+      )
+      if (repIds.length > 0) {
+        const { data: reps } = await supabase
+          .from('profiles')
+          .select('id, full_name, commission_per_unit')
+          .in('id', repIds)
+        for (const r of reps ?? []) {
+          repInfo.set(r.id, {
+            name: r.full_name ?? '',
+            rate: Number(r.commission_per_unit),
+          })
+        }
+      }
+    }
+
     const header = isAdmin
-      ? ['Date', 'Product', 'Type', 'Quantity', 'Unit Price (ZAR)', 'Line Total (ZAR)', 'Reason', 'Note', 'Client', 'Recorded By']
+      ? ['Date', 'Product', 'Type', 'Quantity', 'Unit Price (ZAR)', 'Line Total (ZAR)', 'Rep', 'Commission (ZAR)', 'Reason', 'Note', 'Client', 'Recorded By']
       : ['Date', 'Product', 'Type', 'Quantity', 'Reason', 'Note', 'Client', 'Recorded By']
 
     const rows = [
@@ -52,6 +76,12 @@ export async function exportMovementsCSV(
             (m.products as { unit_price?: number | string } | null)?.unit_price ?? 0
           )
           const lineTotal = m.movement_type === 'dispatch' ? m.quantity * unitPrice : 0
+          const repId = (m.clients as { rep_id?: string | null } | null)?.rep_id ?? null
+          const rep = repId ? repInfo.get(repId) : undefined
+          const repName = rep?.name ?? ''
+          const commission = rep && m.movement_type === 'dispatch'
+            ? m.quantity * rep.rate
+            : 0
           return [
             date,
             productName,
@@ -59,6 +89,8 @@ export async function exportMovementsCSV(
             String(m.quantity),
             unitPrice.toFixed(2),
             lineTotal.toFixed(2),
+            repName,
+            commission.toFixed(2),
             m.movement_type === 'adjustment' ? reason : '',
             m.note ?? '',
             clientName,

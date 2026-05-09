@@ -27,8 +27,10 @@ import { useUser } from '@/components/providers/user-provider'
 import type { Tables } from '@/types/database'
 
 type Client = Tables<'clients'>
+type Rep = { id: string; full_name: string | null }
 
-export function ClientsTable({ clients }: { clients: Client[] }) {
+export function ClientsTable({ clients, reps }: { clients: Client[]; reps: Rep[] }) {
+  const repById = new Map(reps.map((r) => [r.id, r.full_name ?? '—']))
   const { profile } = useUser()
   const isAdmin = profile?.role === 'admin'
 
@@ -92,6 +94,7 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
               <TableHead>Contact</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
+              {isAdmin && <TableHead>Rep</TableHead>}
               <TableHead>Status</TableHead>
               {isAdmin && <TableHead className="w-[100px]" />}
             </TableRow>
@@ -99,7 +102,7 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
           <TableBody>
             {clients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 6 : 5} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={isAdmin ? 7 : 5} className="text-center text-muted-foreground py-10">
                   No clients yet.
                 </TableCell>
               </TableRow>
@@ -110,6 +113,11 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
                   <TableCell>{client.contact_name ?? '—'}</TableCell>
                   <TableCell>{client.email ?? '—'}</TableCell>
                   <TableCell>{client.phone ?? '—'}</TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      {client.rep_id ? repById.get(client.rep_id) ?? '—' : '—'}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <StatusBadge isActive={client.is_active} />
                   </TableCell>
@@ -150,6 +158,7 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           client={selectedClient}
+          reps={reps}
         />
       )}
 

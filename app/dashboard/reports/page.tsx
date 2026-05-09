@@ -22,6 +22,13 @@ interface RevenueByClient {
   revenue: number
 }
 
+interface CommissionByRep {
+  rep_id: string
+  rep_name: string
+  bags: number
+  commission: number
+}
+
 interface ReportsPageProps {
   searchParams: Promise<{ from?: string; to?: string }>
 }
@@ -104,6 +111,47 @@ export default async function ReportsPage({ searchParams: searchParamsPromise }:
 
     revenueByProduct = Array.from(productAcc.values()).sort((a, b) => b.revenue - a.revenue)
     revenueByClient = Array.from(clientAcc.values()).sort((a, b) => b.revenue - a.revenue)
+  }
+
+  // Admin-only: commission by rep
+  const commissionByRep: CommissionByRep[] = []
+  let commissionTotal = 0
+  if (isAdmin) {
+    const { data: repDispatches } = await supabase
+      .from('stock_movements')
+      .select('quantity, clients!inner(rep_id)')
+      .eq('movement_type', 'dispatch')
+      .gte('created_at', `${fromStr}T00:00:00.000Z`)
+      .lte('created_at', `${toStr}T23:59:59.999Z`)
+      .not('clients.rep_id', 'is', null)
+
+    const bagsByRep = new Map<string, number>()
+    for (const d of repDispatches ?? []) {
+      const c = d.clients as { rep_id: string | null } | null
+      if (!c?.rep_id) continue
+      bagsByRep.set(c.rep_id, (bagsByRep.get(c.rep_id) ?? 0) + d.quantity)
+    }
+
+    const repIds = Array.from(bagsByRep.keys())
+    if (repIds.length > 0) {
+      const { data: repProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, commission_per_unit')
+        .in('id', repIds)
+
+      for (const rp of repProfiles ?? []) {
+        const bags = bagsByRep.get(rp.id) ?? 0
+        const commission = bags * Number(rp.commission_per_unit)
+        commissionTotal += commission
+        commissionByRep.push({
+          rep_id: rp.id,
+          rep_name: rp.full_name ?? '—',
+          bags,
+          commission,
+        })
+      }
+      commissionByRep.sort((a, b) => b.commission - a.commission)
+    }
   }
 
   // Aggregate by product
@@ -274,6 +322,45 @@ export default async function ReportsPage({ searchParams: searchParamsPromise }:
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Commission summary
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                Total: {formatZAR(commissionTotal)}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {commissionByRep.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No dispatches with assigned reps in selected period.</p>
+            ) : (
+              <div className="rounded-md border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left px-3 py-2 font-medium">Rep</th>
+                      <th className="text-right px-3 py-2 font-medium">Bags sold</th>
+                      <th className="text-right px-3 py-2 font-medium">Commission</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {commissionByRep.map((r) => (
+                      <tr key={r.rep_id} className="border-t">
+                        <td className="px-3 py-2">{r.rep_name}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{r.bags}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{formatZAR(r.commission)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
