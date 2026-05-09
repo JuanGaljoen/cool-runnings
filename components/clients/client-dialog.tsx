@@ -20,24 +20,35 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createClientAction, updateClientAction } from '@/app/dashboard/clients/actions'
 import { clientSchema, type ClientFormValues } from '@/lib/schemas/client'
 import type { Tables } from '@/types/database'
 
 type Client = Tables<'clients'>
+type Rep = { id: string; full_name: string | null }
+
+const NO_REP = '__none__'
 
 interface ClientDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   client: Client | null
+  reps: Rep[]
 }
 
-export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) {
+export function ClientDialog({ open, onOpenChange, client, reps }: ClientDialogProps) {
   const isEdit = !!client
 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
-    defaultValues: { company_name: '', contact_name: '', email: '', phone: '' },
+    defaultValues: { company_name: '', contact_name: '', email: '', phone: '', rep_id: null },
   })
 
   useEffect(() => {
@@ -47,9 +58,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         contact_name: client.contact_name ?? '',
         email: client.email ?? '',
         phone: client.phone ?? '',
+        rep_id: client.rep_id ?? null,
       })
     } else {
-      form.reset({ company_name: '', contact_name: '', email: '', phone: '' })
+      form.reset({ company_name: '', contact_name: '', email: '', phone: '', rep_id: null })
     }
   }, [client, form])
 
@@ -123,6 +135,34 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   <FormControl>
                     <Input placeholder="+27 82 000 0000" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="rep_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sales rep <span className="text-muted-foreground">(optional)</span></FormLabel>
+                  <Select
+                    value={field.value ?? NO_REP}
+                    onValueChange={(v) => field.onChange(v === NO_REP ? null : v)}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Unassigned" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_REP}>Unassigned</SelectItem>
+                      {reps.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.full_name ?? r.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

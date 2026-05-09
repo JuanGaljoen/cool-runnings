@@ -23,6 +23,7 @@ export type Database = {
           id: string
           is_active: boolean
           phone: string | null
+          rep_id: string | null
         }
         Insert: {
           company_name: string
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           phone?: string | null
+          rep_id?: string | null
         }
         Update: {
           company_name?: string
@@ -41,8 +43,17 @@ export type Database = {
           id?: string
           is_active?: boolean
           phone?: string | null
+          rep_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_rep_id_fkey"
+            columns: ["rep_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -82,6 +93,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          commission_per_unit: number
           created_at: string
           full_name: string | null
           id: string
@@ -89,6 +101,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          commission_per_unit?: number
           created_at?: string
           full_name?: string | null
           id: string
@@ -96,6 +109,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          commission_per_unit?: number
           created_at?: string
           full_name?: string | null
           id?: string
@@ -200,7 +214,7 @@ export type Database = {
     }
     Enums: {
       movement_type: "production" | "dispatch" | "adjustment"
-      user_role: "admin" | "staff"
+      user_role: "admin" | "staff" | "rep"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -329,7 +343,7 @@ export const Constants = {
   public: {
     Enums: {
       movement_type: ["production", "dispatch", "adjustment"],
-      user_role: ["admin", "staff"],
+      user_role: ["admin", "staff", "rep"],
     },
   },
 } as const

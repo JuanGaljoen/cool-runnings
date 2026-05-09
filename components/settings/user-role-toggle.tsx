@@ -49,6 +49,7 @@ export function UserRoleToggle({ userId, currentRole, isSelf }: UserRoleTogglePr
       <SelectContent>
         <SelectItem value="admin">Admin</SelectItem>
         <SelectItem value="staff">Staff</SelectItem>
+        <SelectItem value="rep">Rep</SelectItem>
       </SelectContent>
     </Select>
   )

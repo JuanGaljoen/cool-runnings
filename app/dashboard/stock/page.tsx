@@ -8,6 +8,12 @@ import { Button } from '@/components/ui/button'
 export default async function StockPage() {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+    : { data: null }
+  const isRep = profile?.role === 'rep'
+
   const [productsResult, clientsResult] = await Promise.all([
     supabase
       .from('products')
@@ -45,10 +51,12 @@ export default async function StockPage() {
 
       <StockSummary products={productList} />
 
-      <MovementForm
-        products={productList.map((p) => ({ id: p.id, name: p.name }))}
-        clients={clientList}
-      />
+      {!isRep && (
+        <MovementForm
+          products={productList.map((p) => ({ id: p.id, name: p.name }))}
+          clients={clientList}
+        />
+      )}
     </div>
   )
 }

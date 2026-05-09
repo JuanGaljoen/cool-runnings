@@ -7,7 +7,7 @@ import { inviteSchema } from '@/lib/schemas/invite'
 import type { Enums } from '@/types/database'
 
 export async function inviteUser(
-  values: { email: string }
+  values: { email: string; role: Enums<'user_role'> }
 ): Promise<{ error: string | null }> {
   return adminAction(async ({ adminClient }) => {
     const parsed = validate(inviteSchema, values)
@@ -27,7 +27,7 @@ export async function inviteUser(
 
     const { error: upsertError } = await adminClient
       .from('profiles')
-      .upsert({ id: data.user.id, role: 'staff' }, { onConflict: 'id' })
+      .upsert({ id: data.user.id, role: parsed.data.role }, { onConflict: 'id' })
 
     if (upsertError) return { error: upsertError.message }
 
