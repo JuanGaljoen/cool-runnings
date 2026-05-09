@@ -5,6 +5,12 @@ A web-based inventory management system for an ice manufacturing company.
 One factory, one location. A small internal team (3–10 staff) manage stock day-to-day.
 Built and hosted by the developer on behalf of the client.
 
+## Project notes
+Deferred items, security follow-ups, and future ideas live in `TODO.md` at
+the project root. When you finish a task that closes a TODO, strike or
+remove the entry there. When you encounter something worth deferring, add
+it to the appropriate section in `TODO.md` rather than leaving a comment.
+
 ## Tech stack
 - **Framework:** Next.js 14 (App Router, TypeScript)
 - **UI:** Tailwind CSS + shadcn/ui components
@@ -42,11 +48,12 @@ Built and hosted by the developer on behalf of the client.
 Extends Supabase auth.users — `id` is both the PK and FK to `auth.users(id)` (no separate auth_user_id column). A row is auto-created via `handle_new_user` trigger on insert into `auth.users`.
 - id (uuid, PK, FK → auth.users on delete cascade)
 - full_name (text)
-- role (enum: 'admin' | 'staff', default 'staff')
+- role (enum: 'admin' | 'staff' | 'rep', default 'staff')
+- commission_per_unit (numeric(10,2), default 1.00, check ≥ 0) — only meaningful for reps; the per-unit commission paid on dispatches to that rep's clients
 - created_at (timestamp)
 - updated_at (timestamp)
 
-**Trigger:** `prevent_role_self_escalation` blocks any role change unless the caller is an admin (or service role). Required because RLS allows users to update their own profile but is row-level, not column-level.
+**Trigger:** `prevent_role_self_escalation` blocks any role change unless the caller is an admin or the service role (detected via `auth.role() = 'service_role'`). Required because RLS allows users to update their own profile but is row-level, not column-level.
 
 ### products
 - id (uuid, PK)
@@ -87,7 +94,14 @@ The `stock_non_negative` constraint on stock_levels guards against pushes that w
 
 ### clients
 Internal CRUD for the customers staff dispatch ice to. Dispatch movements require a client.
-- id, company_name, contact_name, email, phone, is_active, created_at
+- id (uuid, PK)
+- company_name (text)
+- contact_name (text, nullable)
+- email (text, nullable)
+- phone (text, nullable)
+- rep_id (uuid, FK → profiles on delete set null, nullable) — assigned sales rep (admin-managed)
+- is_active (bool, default true)
+- created_at (timestamp)
 
 ### orders (Phase 2 — do not build yet, table not yet created)
 Planned shape: id, client_id (FK), fulfilled_by (FK → profiles), status (enum: 'pending' | 'confirmed' | 'dispatched' | 'cancelled'), notes, created_at, updated_at.
@@ -99,8 +113,9 @@ Planned shape: id, order_id (FK), product_id (FK), quantity_ordered, quantity_di
 - Auth is handled by Supabase. Use @supabase/ssr for server components and middleware.
 - All /dashboard routes are protected. Unauthenticated users are redirected to /login.
 - Role is stored on the profiles table, not in Supabase metadata.
-- Admin users can: manage products, manage users, access settings.
-- Staff users can: record stock movements, view dashboard, view reports.
+- **Admin** can: manage products, manage users (including assigning reps to clients and editing commission rates), access settings, view revenue + commission reports.
+- **Staff** can: record stock movements (production / dispatch / adjustment), view dashboard, view reports (without revenue/commission). Cannot see pricing.
+- **Rep** can: view what staff sees (read-only) and a per-rep "My commission" card on their dashboard summarising bags dispatched to their assigned clients × `commission_per_unit`. Cannot record movements (blocked at the action layer in `createMovement`). Cannot see pricing. Cannot manage anything.
 - Hide admin-only UI elements based on role — do not just rely on route protection.
 
 ## Row Level Security
@@ -127,19 +142,20 @@ Planned shape: id, order_id (FK), product_id (FK), quantity_ordered, quantity_di
 - The app must be mobile-responsive — the sidebar collapses to a hamburger on small screens.
 - Format ZAR values with `formatZAR(value)` from `lib/utils.ts` — never hardcode "R" prefixes or decimal formatting.
 
-## Pricing visibility
-Pricing (`products.unit_price`) is admin-only. Defense in depth:
-- **Page/server level:** queries that may surface to staff must use an explicit column allowlist that excludes `unit_price` (e.g. the products page branches on role). Never `.select('*')` on `products` for staff.
-- **Server actions:** when an action's output exposes pricing, branch the query and CSV columns on `isAdmin` (see `exportMovementsCSV`, `exportStockLevelsCSV` for the pattern).
-- **UI:** conditionally render price columns/cards based on the user's role. The products page, reports page, and CSV exports all already follow this.
-- The DB layer does **not** currently column-restrict `unit_price` — enforcement is application-side. If pricing is ever exposed beyond trusted internal staff, harden with a `products_public` view or a column-level GRANT.
+## Pricing & commission visibility
+Pricing (`products.unit_price`) and commission data (`profiles.commission_per_unit`, the Commission summary card, the Rep + Commission CSV columns) are **admin-only**. Staff and reps must not see them. Defense in depth:
+- **Page/server level:** queries that may surface to staff or reps must use an explicit column allowlist that excludes `unit_price` (e.g. the products page branches on role). Never `.select('*')` on `products` for non-admins.
+- **Server actions:** when an action's output exposes pricing or commission, branch the query and CSV columns on `isAdmin` (see `exportMovementsCSV`, `exportStockLevelsCSV` for the pattern).
+- **UI:** conditionally render price/revenue/commission columns and cards based on the user's role. The products page, reports page, and CSV exports all already follow this.
+- The rep's own commission *is* visible to them on their dashboard, but only as a single "My commission" card filtered to their own clients (`clients.rep_id = auth.uid()`). Reps cannot see other reps' or admins' commission data.
+- The DB layer does **not** currently column-restrict `unit_price` or `commission_per_unit` — enforcement is application-side. If data is ever exposed beyond trusted internal users, harden with views or column-level GRANTs (tracked in `TODO.md`).
 
 ## Phase 2 (do not build — for context only)
 Phase 2 adds a client-facing order portal. Clients register and log in separately,
 place orders, and track order status. Stock deducts automatically on dispatch.
-The orders and order_items tables are already in the DB schema so Phase 2
-requires no breaking changes to the data model. (The clients table is already
-in active use by the internal dispatch workflow.)
+The orders and order_items tables are not yet created — they'll be added in
+Phase 2 itself. (The clients table is already in active use by the internal
+dispatch workflow.)
 
 ## What NOT to do
 - Do not use the Pages Router — App Router only.
