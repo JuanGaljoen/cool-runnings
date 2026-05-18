@@ -38,6 +38,7 @@ export function MovementChart({ data }: { data: ChartDataPoint[] }) {
         />
         <YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
         <Tooltip
+          cursor={{ fill: 'hsl(var(--foreground))', fillOpacity: 0.05 }}
           contentStyle={{
             borderRadius: '8px',
             fontSize: '13px',
