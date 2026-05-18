@@ -244,7 +244,7 @@ export default async function DashboardPage() {
           <CardTitle className="text-base">Current stock levels</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <StockSummary products={products} />
+          <StockSummary products={products} compact />
         </CardContent>
       </Card>
 
