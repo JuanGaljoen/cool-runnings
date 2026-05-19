@@ -52,7 +52,7 @@ export function RecentMovementsTable({ movements, compact = false }: RecentMovem
           <TableRow>
             <TableHead>Product</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead className="text-right">Quantity</TableHead>
+            <TableHead>Quantity</TableHead>
             {!compact && <TableHead>Reason</TableHead>}
             {!compact && <TableHead>Note</TableHead>}
             <TableHead>Client</TableHead>
@@ -76,7 +76,7 @@ export function RecentMovementsTable({ movements, compact = false }: RecentMovem
                 <TableCell>
                   <MovementBadge type={m.movement_type} />
                 </TableCell>
-                <TableCell className="text-right">{m.quantity}</TableCell>
+                <TableCell className="tabular-nums">{m.quantity}</TableCell>
                 {!compact && (
                   <TableCell className="text-muted-foreground text-sm">
                     {m.movement_type === 'adjustment' ? formatAdjustmentReason(m.adjustment_reason) : '—'}
