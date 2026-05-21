@@ -58,7 +58,6 @@ Extends Supabase auth.users — `id` is both the PK and FK to `auth.users(id)` (
 ### products
 - id (uuid, PK)
 - name (text) — e.g. "5kg Bag", "10kg Bag", "Block Ice", "Crushed Ice"
-- sku (text, unique)
 - unit (text) — e.g. "bag", "block"
 - low_stock_threshold (int) — alert when stock_levels.quantity falls below this
 - unit_price (numeric(10,2), default 0, check ≥ 0) — sale price in ZAR; **admin-visible only**

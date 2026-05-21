@@ -16,13 +16,13 @@ export async function exportStockLevelsCSV(): Promise<{ csv: string | null; file
 
     const adminQuery = supabase
       .from('products')
-      .select('name, sku, unit, low_stock_threshold, unit_price, stock_levels(quantity)')
+      .select('name, unit, low_stock_threshold, unit_price, stock_levels(quantity)')
       .eq('is_active', true)
       .order('name')
 
     const staffQuery = supabase
       .from('products')
-      .select('name, sku, unit, low_stock_threshold, stock_levels(quantity)')
+      .select('name, unit, low_stock_threshold, stock_levels(quantity)')
       .eq('is_active', true)
       .order('name')
 
@@ -31,8 +31,8 @@ export async function exportStockLevelsCSV(): Promise<{ csv: string | null; file
     if (error) return { csv: null, filename: '', error: error.message }
 
     const header = isAdmin
-      ? ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status', 'Unit Price (ZAR)', 'Stock Value (ZAR)']
-      : ['Product', 'SKU', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status']
+      ? ['Product', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status', 'Unit Price (ZAR)', 'Stock Value (ZAR)']
+      : ['Product', 'Unit', 'Quantity', 'Low Stock Threshold', 'Status']
 
     const rows = [
       header,
@@ -43,7 +43,6 @@ export async function exportStockLevelsCSV(): Promise<{ csv: string | null; file
 
         const baseRow = [
           p.name,
-          p.sku,
           p.unit,
           String(quantity),
           String(p.low_stock_threshold),

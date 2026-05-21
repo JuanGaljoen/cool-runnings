@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils'
 type ProductWithStock = {
   id: string
   name: string
-  sku: string
   unit: string
   low_stock_threshold: number
   stock_levels: { quantity: number } | { quantity: number }[] | null
@@ -88,7 +87,6 @@ export function StockSummary({ products, compact = false }: StockSummaryProps) {
         <TableHeader>
           <TableRow>
             <TableHead>Product</TableHead>
-            <TableHead>SKU</TableHead>
             <TableHead>Unit</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Low stock threshold</TableHead>
@@ -121,7 +119,6 @@ export function StockSummary({ products, compact = false }: StockSummaryProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                   <TableCell>{product.unit}</TableCell>
                   <TableCell className="tabular-nums">{quantity}</TableCell>
                   <TableCell className="tabular-nums">{product.low_stock_threshold}</TableCell>

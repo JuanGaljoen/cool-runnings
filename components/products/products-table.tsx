@@ -61,7 +61,6 @@ export function ProductsTable({ products, isAdmin }: ProductsTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>SKU</TableHead>
               <TableHead>Unit</TableHead>
               <TableHead>Low stock threshold</TableHead>
               {isAdmin && <TableHead className="text-right">Price</TableHead>}
@@ -85,7 +84,6 @@ export function ProductsTable({ products, isAdmin }: ProductsTableProps) {
               products.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                   <TableCell>{product.unit}</TableCell>
                   <TableCell>{product.low_stock_threshold}</TableCell>
                   {isAdmin && (

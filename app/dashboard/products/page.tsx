@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { ProductsTable } from '@/components/products/products-table'
 
-const STAFF_COLUMNS = 'id, name, sku, unit, low_stock_threshold, is_active, created_at, updated_at'
+const STAFF_COLUMNS = 'id, name, unit, low_stock_threshold, is_active, created_at, updated_at'
 
 export default async function ProductsPage() {
   const supabase = await createClient()

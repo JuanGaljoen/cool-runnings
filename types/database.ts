@@ -62,7 +62,6 @@ export type Database = {
           is_active: boolean
           low_stock_threshold: number
           name: string
-          sku: string
           unit: string
           unit_price: number
           updated_at: string
@@ -73,7 +72,6 @@ export type Database = {
           is_active?: boolean
           low_stock_threshold?: number
           name: string
-          sku: string
           unit: string
           unit_price?: number
           updated_at?: string
@@ -84,7 +82,6 @@ export type Database = {
           is_active?: boolean
           low_stock_threshold?: number
           name?: string
-          sku?: string
           unit?: string
           unit_price?: number
           updated_at?: string
