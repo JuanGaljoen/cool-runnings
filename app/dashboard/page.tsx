@@ -59,7 +59,7 @@ export default async function DashboardPage() {
     movementsTodayResult,
     recentMovementsResult,
     chartMovementsResult,
-    todayDispatchesResult,
+    weekDispatchesResult,
     clientsResult,
   ] = await Promise.all([
     supabase
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
       .from('stock_movements')
       .select('quantity, clients(company_name)')
       .eq('movement_type', 'dispatch')
-      .gte('created_at', startOfToday.toISOString()),
+      .gte('created_at', sevenDaysAgo.toISOString()),
 
     supabase
       .from('clients')
@@ -104,7 +104,7 @@ export default async function DashboardPage() {
   const todayMovements = movementsTodayResult.data ?? []
   const recentMovements = recentMovementsResult.data ?? []
   const chartMovements = chartMovementsResult.data ?? []
-  const todayDispatches = todayDispatchesResult.data ?? []
+  const weekDispatches = weekDispatchesResult.data ?? []
   const clients = clientsResult.data ?? []
 
   // Stat cards
@@ -144,9 +144,9 @@ export default async function DashboardPage() {
     }
   })
 
-  // Today's dispatches by client
+  // Dispatches by client — last 7 days
   const clientMap = new Map<string, number>()
-  for (const m of todayDispatches) {
+  for (const m of weekDispatches) {
     const name = (m.clients as { company_name: string } | null)?.company_name
     if (!name) continue
     clientMap.set(name, (clientMap.get(name) ?? 0) + m.quantity)
@@ -268,7 +268,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Today&apos;s dispatches by client</CardTitle>
+            <CardTitle className="text-base">Dispatches by client — last 7 days</CardTitle>
           </CardHeader>
           <CardContent className="p-0 pb-2">
             <TodaysClientDispatches rows={clientDispatchRows} />
