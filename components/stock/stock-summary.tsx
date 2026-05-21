@@ -90,8 +90,8 @@ export function StockSummary({ products, compact = false }: StockSummaryProps) {
             <TableHead>Product</TableHead>
             <TableHead>SKU</TableHead>
             <TableHead>Unit</TableHead>
-            <TableHead className="text-right">Quantity</TableHead>
-            <TableHead className="text-right">Low stock threshold</TableHead>
+            <TableHead>Quantity</TableHead>
+            <TableHead>Low stock threshold</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -123,8 +123,8 @@ export function StockSummary({ products, compact = false }: StockSummaryProps) {
                   </TableCell>
                   <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                   <TableCell>{product.unit}</TableCell>
-                  <TableCell className="text-right">{quantity}</TableCell>
-                  <TableCell className="text-right">{product.low_stock_threshold}</TableCell>
+                  <TableCell className="tabular-nums">{quantity}</TableCell>
+                  <TableCell className="tabular-nums">{product.low_stock_threshold}</TableCell>
                 </TableRow>
               )
             })
