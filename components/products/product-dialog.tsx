@@ -35,7 +35,6 @@ interface ProductDialogProps {
 
 const defaultValues: ProductFormValues = {
   name: '',
-  sku: '',
   unit: '',
   low_stock_threshold: 0,
   is_active: true,
@@ -58,7 +57,6 @@ export function ProductDialog({
     if (product) {
       form.reset({
         name: product.name,
-        sku: product.sku,
         unit: product.unit,
         low_stock_threshold: product.low_stock_threshold,
         is_active: product.is_active,
@@ -108,35 +106,19 @@ export function ProductDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="sku"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>SKU</FormLabel>
-                    <FormControl>
-                      <Input placeholder="SKU-001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="unit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit</FormLabel>
-                    <FormControl>
-                      <Input placeholder="kg, L, pcs…" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="unit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unit</FormLabel>
+                  <FormControl>
+                    <Input placeholder="kg, L, pcs…" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

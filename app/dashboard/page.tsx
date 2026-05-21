@@ -64,7 +64,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, sku, unit, low_stock_threshold, stock_levels(quantity)')
+      .select('id, name, unit, low_stock_threshold, stock_levels(quantity)')
       .eq('is_active', true)
       .order('name'),
 

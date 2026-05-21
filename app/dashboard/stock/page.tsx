@@ -17,7 +17,7 @@ export default async function StockPage() {
   const [productsResult, clientsResult] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, sku, unit, low_stock_threshold, stock_levels(quantity)')
+      .select('id, name, unit, low_stock_threshold, stock_levels(quantity)')
       .eq('is_active', true)
       .order('name'),
     supabase
@@ -52,10 +52,12 @@ export default async function StockPage() {
       <StockSummary products={productList} />
 
       {!isRep && (
-        <MovementForm
-          products={productList.map((p) => ({ id: p.id, name: p.name }))}
-          clients={clientList}
-        />
+        <div className="max-w-2xl">
+          <MovementForm
+            products={productList.map((p) => ({ id: p.id, name: p.name }))}
+            clients={clientList}
+          />
+        </div>
       )}
     </div>
   )
