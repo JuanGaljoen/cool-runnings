@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { format, eachDayOfInterval, subDays } from 'date-fns'
+import { format, eachDayOfInterval, formatDistanceToNow, subDays } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { RecentMovementsTable } from '@/components/dashboard/recent-movements-table'
@@ -241,7 +241,14 @@ export default async function DashboardPage() {
       {/* Stock levels */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Current stock levels</CardTitle>
+          <div className="flex items-baseline justify-between gap-3">
+            <CardTitle className="text-base">Current stock levels</CardTitle>
+            {recentMovements[0]?.created_at && (
+              <span className="text-xs text-muted-foreground">
+                Updated {formatDistanceToNow(new Date(recentMovements[0].created_at), { addSuffix: true })}
+              </span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0 pb-2">
           <StockSummary products={products} compact />
