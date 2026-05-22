@@ -37,6 +37,33 @@ top of the relevant section. Strike or remove items when shipped.
   rejects invalid input cleanly, so impact is minor — still worth a
   zod parse for consistency.
 
+## Refactoring (DRY / SOLID)
+
+- **Extract `getCurrentRole(supabase)` helper** into `lib/auth-helpers.ts`.
+  The same get-user → fetch-profile-role → derive-`isAdmin`/`isRep` block is
+  duplicated in `app/dashboard/page.tsx`, `app/dashboard/stock/page.tsx`,
+  `app/dashboard/products/page.tsx`, `app/dashboard/reports/page.tsx`, and
+  others. Single helper would kill ~25 duplicate lines.
+
+- **Extract a `toCSV(rows: string[][]): string` helper.** The header + escape
+  quotes + join pattern is reimplemented in `exportStockLevelsCSV` and
+  `exportMovementsCSV` in their respective action files.
+
+- **Extract `getQuantity(stock_levels)` helper.** The
+  "array-or-object from Supabase join" handling appears inline in
+  `components/stock/stock-summary.tsx`, `app/dashboard/page.tsx`, and
+  `app/dashboard/stock/actions.ts`.
+
+- **Replace `isAdmin / isStaff / isRep` booleans with capability functions.**
+  Currently role checks are scattered as `role === 'admin'` literals. Prefer
+  `canRecordMovements(role)`, `canSeePricing(role)`,
+  `canSeeOthersCommission(role)`, etc. Centralises authorisation logic and
+  makes adding a fourth role (e.g. `'driver'` in Phase 3) safer.
+
+- **Split `app/dashboard/page.tsx`** (~290 lines). Could extract the rep
+  commission section, the stat-card section, and the chart computation into
+  smaller server components or helper functions.
+
 ## Future product features
 
 - **Rep self-service** — reps can edit their own profile (name/email/phone).
