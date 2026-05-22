@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -37,7 +38,7 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
-export default function SetPasswordPage() {
+function SetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isReset = searchParams.get('mode') === 'reset'
@@ -133,5 +134,13 @@ export default function SetPasswordPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function SetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <SetPasswordForm />
+    </Suspense>
   )
 }

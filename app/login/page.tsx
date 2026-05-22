@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useFormState, useFormStatus } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 import { login } from './actions'
@@ -26,7 +27,7 @@ function SubmitButton() {
   )
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, formAction] = useFormState(login, { error: null })
   const searchParams = useSearchParams()
   const linkError = searchParams.get('error') === 'auth'
@@ -81,5 +82,13 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }

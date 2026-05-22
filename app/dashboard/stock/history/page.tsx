@@ -30,8 +30,6 @@ export default async function MovementHistoryPage({ searchParams: searchParamsPr
   const defaultFrom = format(subDays(new Date(), 29), 'yyyy-MM-dd')
   const rawFrom = new Date(`${searchParams.from ?? defaultFrom}T00:00:00`)
   const rawTo = new Date(`${searchParams.to ?? todayStr}T23:59:59`)
-  const fromStr = isNaN(rawFrom.getTime()) ? defaultFrom : (searchParams.from ?? defaultFrom)
-  const toStr = isNaN(rawTo.getTime()) ? todayStr : (searchParams.to ?? todayStr)
   const fromDate = isNaN(rawFrom.getTime()) ? new Date(`${defaultFrom}T00:00:00`) : rawFrom
   const toDate = isNaN(rawTo.getTime()) ? new Date(`${todayStr}T23:59:59`) : rawTo
 
