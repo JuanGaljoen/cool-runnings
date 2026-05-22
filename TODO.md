@@ -37,12 +37,6 @@ top of the relevant section. Strike or remove items when shipped.
   rejects invalid input cleanly, so impact is minor — still worth a
   zod parse for consistency.
 
-## Code quality
-
-- **Pre-existing lint errors in `app/dashboard/stock/history/page.tsx`** —
-  unused `fromStr` and `toStr` variables. Either use them or remove them.
-  These pre-date the pricing/rep work; visible in `npm run lint`.
-
 ## Future product features
 
 - **Rep self-service** — reps can edit their own profile (name/email/phone).
