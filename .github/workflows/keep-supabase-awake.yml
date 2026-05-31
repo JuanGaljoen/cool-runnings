@@ -1,12 +1,14 @@
 name: Keep Supabase awake
 
 # Supabase pauses free-tier projects after 7 days of inactivity.
-# This workflow makes a tiny REST query every 6 days to reset the timer.
-# Margin of 1 day absorbs any GitHub-side cron delay.
+# This workflow makes a tiny REST query daily to reset the timer.
+# Daily (rather than near the 7-day edge) leaves a wide margin for any
+# skipped or delayed run. Note: GitHub auto-disables scheduled workflows
+# after 60 days of repo inactivity — re-enable from the Actions tab if so.
 
 on:
   schedule:
-    - cron: '0 6 */6 * *'   # 06:00 UTC every 6 days
+    - cron: '0 6 * * *'     # 06:00 UTC every day
   workflow_dispatch: {}     # allow manual runs from the Actions tab
 
 jobs:
