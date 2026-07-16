@@ -11,6 +11,14 @@
  *  - Stock movements are tagged with a "[seed]" note marker; if any seeded
  *    movements already exist the movement batch is skipped, so re-running the
  *    script will not keep inflating the ledger.
+ *
+ * Movement window (SEED_DAYS, default 7):
+ *  - Movements are anchored to the day the script runs, so an old seed leaves
+ *    the "last N days" dashboard views empty. The batch spans the last
+ *    SEED_DAYS days ending today, so the recent-activity charts populate.
+ *  - Idempotency is scoped to that window: if seeded movements already exist
+ *    within it the batch is skipped, so re-running won't keep inflating stock,
+ *    but an older seed (outside the window) won't block a fresh top-up.
  */
 import { createClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
@@ -85,13 +93,18 @@ async function seedClients(repId: string | null): Promise<void> {
   log(`clients: added ${rows.length} (${rows.map((c) => c.company_name).join(', ')})`)
 }
 
+const SEED_DAYS = Math.max(1, Number(process.env.SEED_DAYS ?? 7))
+
 async function seedMovements(): Promise<void> {
+  const DAY = 24 * 60 * 60 * 1000
+  const windowStart = new Date(Date.now() - SEED_DAYS * DAY).toISOString()
   const { count } = await sb
     .from('stock_movements')
     .select('*', { count: 'exact', head: true })
     .ilike('note', `${SEED_NOTE}%`)
+    .gte('created_at', windowStart)
   if ((count ?? 0) > 0) {
-    log(`movements: ${count} seeded rows already present, skipping`)
+    log(`movements: ${count} seeded rows already present in the last ${SEED_DAYS} days, skipping`)
     return
   }
 
@@ -116,12 +129,12 @@ async function seedMovements(): Promise<void> {
   }
   const rows: Row[] = []
   const now = Date.now()
-  const DAY = 24 * 60 * 60 * 1000
 
-  // Walk the last 30 days. Each weekday: a production run per product, then a
-  // few dispatches, then the occasional adjustment. Productions are queued
-  // before dispatches in insert order so the stock_non_negative check is safe.
-  for (let d = 30; d >= 0; d--) {
+  // Walk the last SEED_DAYS days. Each weekday: a production run per product,
+  // then a few dispatches, then the occasional adjustment. Productions are
+  // queued before dispatches in insert order so the stock_non_negative check
+  // is safe.
+  for (let d = SEED_DAYS; d >= 0; d--) {
     const date = new Date(now - d * DAY)
     const dow = date.getDay()
     if (dow === 0) continue // skip Sundays
@@ -174,7 +187,7 @@ async function seedMovements(): Promise<void> {
     const { error } = await sb.from('stock_movements').insert(rows.slice(i, i + 100))
     if (error) throw error
   }
-  log(`movements: added ${rows.length} seeded rows across the last 30 days`)
+  log(`movements: added ${rows.length} seeded rows across the last ${SEED_DAYS} days`)
 }
 
 async function main(): Promise<void> {
