@@ -10,6 +10,8 @@ purposes — the client runs a separate private deployment.
 
 > **Stack:** Next.js 14 (App Router) · TypeScript · Supabase (Postgres) · Tailwind CSS · shadcn/ui
 
+![A morning production run, then a dispatch that drops Ice Cubes 2kg below its threshold; the dashboard flags it and the reports reflect it](docs/screenshots/walkthrough.gif)
+
 ---
 
 ## Why it's interesting
@@ -119,4 +121,11 @@ npm run typecheck   # tsc --noEmit
 
 ## Screenshots
 
-![Dashboard](docs/screenshots/dashboard.png)
+| | |
+|---|---|
+| ![Dashboard with a low-stock alert](docs/screenshots/dashboard.png) | ![Stock levels and the record-movement form](docs/screenshots/stock.png) |
+| **Dashboard** — stock at a glance, low-stock alerts, 7-day activity | **Stock** — record production, dispatches and adjustments |
+| ![Filterable movement history](docs/screenshots/history.png) | ![Reports: product and client summaries](docs/screenshots/reports.png) |
+| **Movement history** — the full audit trail, filterable | **Reports** — date-range summaries with CSV export |
+| ![Admin-only revenue and commission](docs/screenshots/reports-revenue.png) | ![Dashboard in dark mode](docs/screenshots/dashboard-dark.png) |
+| **Revenue & commission** — admin only | **Dark mode** |

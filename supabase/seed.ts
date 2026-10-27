@@ -130,10 +130,20 @@ async function seedMovements(): Promise<void> {
   const rows: Row[] = []
   const now = Date.now()
 
-  // Walk the last SEED_DAYS days. Each weekday: a production run per product,
-  // then a few dispatches, then the occasional adjustment. Productions are
-  // queued before dispatches in insert order so the stock_non_negative check
-  // is safe.
+  // Running level per product, starting from what's already in stock_levels,
+  // so dispatches and adjustments never exceed what's on hand.
+  const { data: levels } = await sb.from('stock_levels').select('product_id,quantity')
+  const onHand = new Map(products.map((p) => [p.id, 0]))
+  for (const l of levels ?? []) if (onHand.has(l.product_id)) onHand.set(l.product_id, l.quantity)
+  const take = (productId: string, want: number) => {
+    const qty = Math.min(want, onHand.get(productId)!)
+    onHand.set(productId, onHand.get(productId)! - qty)
+    return qty
+  }
+
+  // Walk the last SEED_DAYS days. Each working day: a production run per
+  // product, then dispatches sized to roughly match it (so stock hovers instead
+  // of climbing every run), then the occasional adjustment.
   for (let d = SEED_DAYS; d >= 0; d--) {
     const date = new Date(now - d * DAY)
     const dow = date.getDay()
@@ -142,42 +152,53 @@ async function seedMovements(): Promise<void> {
     const at = (hour: number) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, randInt(0, 59)).toISOString()
 
     for (const p of products) {
+      // Top an empty product up to a working float on the first day it's seen.
+      const quantity = onHand.get(p.id)! < 100 ? randInt(250, 400) : randInt(60, 160)
+      onHand.set(p.id, onHand.get(p.id)! + quantity)
       rows.push({
         product_id: p.id,
         created_by: pick(profiles).id,
         client_id: null,
         movement_type: 'production',
-        quantity: randInt(150, 450),
+        quantity,
         adjustment_reason: null,
         note: `${SEED_NOTE} morning run`,
         created_at: at(7),
       })
     }
 
-    for (let i = 0; i < randInt(2, 5); i++) {
-      rows.push({
-        product_id: pick(products).id,
-        created_by: pick(profiles).id,
-        client_id: pick(clients).id,
-        movement_type: 'dispatch',
-        quantity: randInt(20, 140),
-        adjustment_reason: null,
-        note: `${SEED_NOTE} dispatch`,
-        created_at: at(randInt(9, 16)),
-      })
+    for (const p of products) {
+      for (let i = 0; i < randInt(1, 2); i++) {
+        const quantity = take(p.id, randInt(30, 110))
+        if (quantity === 0) continue
+        rows.push({
+          product_id: p.id,
+          created_by: pick(profiles).id,
+          client_id: pick(clients).id,
+          movement_type: 'dispatch',
+          quantity,
+          adjustment_reason: null,
+          note: `${SEED_NOTE} dispatch`,
+          created_at: at(randInt(9, 16)),
+        })
+      }
     }
 
     if (dow === 5) {
-      rows.push({
-        product_id: pick(products).id,
-        created_by: pick(profiles).id,
-        client_id: null,
-        movement_type: 'adjustment',
-        quantity: randInt(5, 30),
-        adjustment_reason: pick([...ADJUSTMENT_REASONS]),
-        note: `${SEED_NOTE} weekly stocktake`,
-        created_at: at(17),
-      })
+      const p = pick(products)
+      const quantity = take(p.id, randInt(5, 30))
+      if (quantity > 0) {
+        rows.push({
+          product_id: p.id,
+          created_by: pick(profiles).id,
+          client_id: null,
+          movement_type: 'adjustment',
+          quantity,
+          adjustment_reason: pick([...ADJUSTMENT_REASONS]),
+          note: `${SEED_NOTE} weekly stocktake`,
+          created_at: at(17),
+        })
+      }
     }
   }
 
